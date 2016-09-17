@@ -34,7 +34,8 @@ namespace osu.Framework.Graphics.Containers
 
         public new void Add(IEnumerable<Drawable> drawables)
         {
-            base.Add(drawables);
+            foreach (Drawable d in drawables)
+                Add(d);
         }
 
         public new virtual bool Remove(Drawable drawable, bool dispose = true)
