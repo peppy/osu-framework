@@ -78,13 +78,6 @@ namespace osu.Framework
 
             AddProcessing(new UserInputManager());
 
-            Add(new PerformanceOverlay()
-            {
-                Anchor = Graphics.Anchor.BottomRight,
-                Origin = Graphics.Anchor.BottomRight,
-                Depth = float.MaxValue
-            });
-
             Add(new FlowContainer
             {
                 Direction = Graphics.Containers.FlowDirection.VerticalOnly,
@@ -97,6 +90,13 @@ namespace osu.Framework
                     new FrameTimeDisplay(@"Update", host.UpdateMonitor),
                     new FrameTimeDisplay(@"Draw", host.DrawMonitor)
                 }
+            });
+
+            Add(new PerformanceOverlay()
+            {
+                Anchor = Graphics.Anchor.BottomRight,
+                Origin = Graphics.Anchor.BottomRight,
+                Depth = float.MaxValue
             });
         }
 
