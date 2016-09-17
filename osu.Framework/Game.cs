@@ -44,6 +44,10 @@ namespace osu.Framework
 
         public TextureStore Fonts;
 
+        private UserInputManager userInputContainer;
+
+        protected override Container AddTarget => userInputContainer;
+
         public Game()
         {
             Game = this;
@@ -77,28 +81,30 @@ namespace osu.Framework
 
             Fonts = new TextureStore(new GlyphStore(Game.Resources, @"Fonts/OpenSans")) { ScaleAdjust = 1 / 100f };
 
-            AddProcessing(new UserInputManager());
-
-            Add(new FlowContainer
+            Add(userInputContainer = new UserInputManager()
             {
-                Direction = Graphics.Containers.FlowDirection.VerticalOnly,
-                Padding = new OpenTK.Vector2(10, 10),
-                Anchor = Graphics.Anchor.BottomRight,
-                Origin = Graphics.Anchor.BottomRight,
-                Depth = float.MaxValue,
-
                 Children = new[] {
-                    new FrameTimeDisplay(@"Update", host.UpdateMonitor),
-                    new FrameTimeDisplay(@"Draw", host.DrawMonitor)
-                }
-            });
+                    new FlowContainer
+                    {
+                        Direction = Graphics.Containers.FlowDirection.VerticalOnly,
+                        Padding = new Vector2(10, 10),
+                        Anchor = Graphics.Anchor.BottomRight,
+                        Origin = Graphics.Anchor.BottomRight,
+                        Depth = float.MaxValue,
 
-            Add(new PerformanceOverlay()
-            {
-                Position = new Vector2(5, 5),
-                Anchor = Graphics.Anchor.BottomRight,
-                Origin = Graphics.Anchor.BottomRight,
-                Depth = float.MaxValue
+                        Children = new[] {
+                            new FrameTimeDisplay(@"Update", host.UpdateMonitor),
+                            new FrameTimeDisplay(@"Draw", host.DrawMonitor)
+                        }
+                    },
+                    new PerformanceOverlay()
+                    {
+                        Position = new Vector2(5, 5),
+                        Anchor = Graphics.Anchor.BottomRight,
+                        Origin = Graphics.Anchor.BottomRight,
+                        Depth = float.MaxValue
+                    }
+                }
             });
         }
 
