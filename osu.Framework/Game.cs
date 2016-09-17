@@ -84,13 +84,26 @@ namespace osu.Framework
                 Origin = Graphics.Anchor.BottomRight,
                 Depth = float.MaxValue
             });
+
+            Add(new FlowContainer
+            {
+                Direction = Graphics.Containers.FlowDirection.VerticalOnly,
+                Padding = new OpenTK.Vector2(10, 10),
+                Anchor = Graphics.Anchor.BottomRight,
+                Origin = Graphics.Anchor.BottomRight,
+                Depth = float.MaxValue,
+
+                Kids = new[] {
+                    new FrameTimeDisplay(@"Update", host.UpdateMonitor),
+                    new FrameTimeDisplay(@"Draw", host.DrawMonitor)
+                }
+            });
         }
 
         protected override void Update()
         {
             Scheduler.Update();
             Audio.Update();
-
             base.Update();
         }
 
