@@ -8,7 +8,7 @@ namespace osu.Framework.Graphics.Textures
 {
     public class RawTextureByteArray : IRawTexture
     {
-        protected byte[] Bytes;
+        public byte[] Bytes;
         protected Rectangle Dimensions;
 
         public PixelFormat PixelFormat { get; protected set; }
