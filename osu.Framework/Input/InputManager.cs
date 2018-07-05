@@ -113,6 +113,7 @@ namespace osu.Framework.Input
         {
             CurrentState = CreateInitialState();
             RelativeSizeAxes = Axes.Both;
+
             foreach (var button in Enum.GetValues(typeof(MouseButton)).Cast<MouseButton>())
             {
                 MouseButtonEventManager manager;
