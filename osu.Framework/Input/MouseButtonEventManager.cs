@@ -239,7 +239,7 @@ namespace osu.Framework.Input
 
             setPositionMouseDown(state);
 
-            DraggedDrawable = MouseDownInputQueue?.Intersect(PositionalInputQueue).FirstOrDefault(target => target.IsAlive && target.IsPresent && target.TriggerOnDragStart(state));
+            DraggedDrawable = MouseDownInputQueue?.FirstOrDefault(target => target.IsAlive && target.IsPresent && target.TriggerOnDragStart(state));
             if (DraggedDrawable != null)
             {
                 DraggedDrawable.IsDragged = true;
