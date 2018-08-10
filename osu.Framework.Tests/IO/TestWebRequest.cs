@@ -2,6 +2,7 @@
 // Licensed under the MIT Licence - https://raw.githubusercontent.com/ppy/osu-framework/master/LICENCE
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
@@ -55,43 +56,62 @@ namespace osu.Framework.Tests.IO
         [Test]
         public void TestConcurrency()
         {
-            const int request_count = 10;
-            const int induced_delay = 5;
+            ThreadPool.GetMinThreads(out int worker, out int completion);
 
-            int finished = 0;
-
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-
-            List<long> startTimes = new List<long>();
-
-            List<Task> running = new List<Task>();
-            for (int i = 0; i < request_count; i++)
+            try
             {
-                var request = new DelayedWebRequest
+                ThreadPool.SetMinThreads(1, completion);
+
+                const int request_count = 10;
+                const int induced_delay = 5;
+
+                int finished = 0;
+
+                long? firstStartTime = null;
+
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+
+                ConcurrentBag<long> startTimes = new ConcurrentBag<long>();
+                List<Task> tasks = new List<Task>();
+
+                for (int i = 0; i < request_count; i++)
                 {
-                    Method = HttpMethod.GET,
-                    Delay = induced_delay
-                };
+                    var request = new DelayedWebRequest
+                    {
+                        Method = HttpMethod.GET,
+                        Delay = induced_delay
+                    };
 
-                request.Started += () => startTimes.Add(sw.ElapsedMilliseconds);
-                request.Finished += () => Interlocked.Increment(ref finished);
-                request.Failed += _ => Interlocked.Increment(ref finished);
-                running.Add(request.PerformAsync());
+                    request.Started += () =>
+                    {
+                        if (!firstStartTime.HasValue)
+                            firstStartTime = sw.ElapsedMilliseconds;
+                        startTimes.Add(sw.ElapsedMilliseconds);
+                    };
+
+                    request.Finished += () => Interlocked.Increment(ref finished);
+                    request.Failed += _ => Interlocked.Increment(ref finished);
+                    tasks.Add(request.PerformAsync());
+                }
+
+                Task.WaitAll(tasks.ToArray());
+
+                // in the case threads are not yielding, the time taken will be greater than double the induced delay (after considering latency).
+                Assert.Less(sw.ElapsedMilliseconds, induced_delay * 2 * 1000);
+
+                Assert.AreEqual(request_count, startTimes.Count);
+
+                // another case would be requests starting too late into the test. just to make sure.
+                while (startTimes.TryTake(out long time))
+                    Assert.Less(time - firstStartTime, induced_delay * 1000);
+
+                Assert.AreEqual(request_count, finished);
             }
-
-            Task.WaitAll(running.ToArray());
-
-            // in the case threads are not yielding, the time taken will be greater than double the induced delay (after considering latency).
-            Assert.Less(sw.ElapsedMilliseconds, induced_delay * 2 * 1000);
-
-            Assert.AreEqual(request_count, startTimes.Count);
-
-            // another case would be requests starting too late into the test. just to make sure.
-            for (int i = 0; i < request_count; i++)
-                Assert.Less(startTimes[i] - startTimes[0], induced_delay * 1000);
-
-            Assert.AreEqual(request_count, finished);
+            finally
+            {
+                ThreadPool.SetMinThreads(worker, completion);
+            }
         }
 
         [Test, Retry(5)]
