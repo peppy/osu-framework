@@ -316,9 +316,9 @@ namespace osu.Framework.Graphics.OpenGL.Textures
             lock (uploadQueue)
             {
                 bool requireUpload = uploadQueue.Count == 0;
+                uploadQueue.Enqueue(upload);
                 if (requireUpload)
-                    uploadQueue.Enqueue(upload);
-                GLWrapper.EnqueueTextureUpload(this);
+                    GLWrapper.EnqueueTextureUpload(this);
             }
         }
 
@@ -419,14 +419,13 @@ namespace osu.Framework.Graphics.OpenGL.Textures
                     GLWrapper.BindTexture(this);
 
                 if (width == upload.Bounds.Width && height == upload.Bounds.Height || dataPointer == IntPtr.Zero)
-                    GL.TexImage2D(TextureTarget2d.Texture2D, upload.Level, TextureComponentCount.Srgb8Alpha8, width, height, 0, upload.Format, PixelType.UnsignedByte, ref dataPointer);
+                    GL.TexImage2D(TextureTarget2d.Texture2D, upload.Level, TextureComponentCount.Srgb8Alpha8, width, height, 0, upload.Format, PixelType.UnsignedByte, dataPointer);
                 else
                 {
                     initializeLevel(upload.Level, width, height);
 
                     GL.TexSubImage2D(TextureTarget2d.Texture2D, upload.Level, upload.Bounds.X, upload.Bounds.Y, upload.Bounds.Width, upload.Bounds.Height, upload.Format,
-                        PixelType.UnsignedByte,
-                        ref dataPointer);
+                        PixelType.UnsignedByte, dataPointer);
                 }
             }
             // Just update content of the current texture
@@ -453,8 +452,7 @@ namespace osu.Framework.Graphics.OpenGL.Textures
                 int div = (int)Math.Pow(2, upload.Level);
 
                 GL.TexSubImage2D(TextureTarget2d.Texture2D, upload.Level, upload.Bounds.X / div, upload.Bounds.Y / div, upload.Bounds.Width / div, upload.Bounds.Height / div,
-                    upload.Format,
-                    PixelType.UnsignedByte, dataPointer);
+                    upload.Format, PixelType.UnsignedByte, dataPointer);
             }
         }
 
