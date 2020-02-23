@@ -534,10 +534,13 @@ namespace osu.Framework.Platform
 
                 resetInputHandlers();
 
-                foreach (var t in threads)
-                    t.Start();
+                //foreach (var t in threads)
+                //    t.Start();
 
-                DrawThread.WaitUntilInitialized();
+                DrawThread.OnThreadStart();
+
+                //DrawThread.WaitUntilInitialized();
+
                 bootstrapSceneGraph(game);
 
                 frameSyncMode.TriggerChange();
@@ -578,7 +581,7 @@ namespace osu.Framework.Platform
                     else
                     {
                         while (ExecutionState != ExecutionState.Stopped)
-                            InputThread.RunUpdate();
+                            InputThread.ProcessFrame();
                     }
                 }
                 catch (OutOfMemoryException)
@@ -595,7 +598,10 @@ namespace osu.Framework.Platform
         private void handleInput()
         {
             inputPerformanceCollectionPeriod?.Dispose();
-            InputThread.RunUpdate();
+            InputThread.ProcessFrame();
+            AudioThread.ProcessFrame();
+            UpdateThread.ProcessFrame();
+            DrawThread.ProcessFrame();
             inputPerformanceCollectionPeriod = inputMonitor.BeginCollecting(PerformanceCollectionType.WndProc);
         }
 
@@ -681,7 +687,7 @@ namespace osu.Framework.Platform
 
             // as the input thread isn't actually handled by a thread, the above join does not necessarily mean it has been completed to an exiting state.
             while (!InputThread.Exited)
-                InputThread.RunUpdate();
+                InputThread.ProcessFrame();
         }
 
         private void legacyKeyDown(object sender, KeyboardKeyEventArgs e)

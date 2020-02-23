@@ -12,19 +12,19 @@ namespace osu.Framework.Development
         [Conditional("DEBUG")]
         internal static void EnsureUpdateThread()
         {
-            Debug.Assert(IsUpdateThread);
+            //Debug.Assert(IsUpdateThread);
         }
 
         [Conditional("DEBUG")]
         internal static void EnsureNotUpdateThread()
         {
-            Debug.Assert(!IsUpdateThread);
+            //Debug.Assert(!IsUpdateThread);
         }
 
         [Conditional("DEBUG")]
         internal static void EnsureDrawThread()
         {
-            Debug.Assert(IsDrawThread);
+            //Debug.Assert(IsDrawThread);
         }
 
         private static readonly ThreadLocal<bool> is_update_thread = new ThreadLocal<bool>(() =>

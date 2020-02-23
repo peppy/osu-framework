@@ -119,7 +119,7 @@ namespace osu.Framework.Threading
             }
         }
 
-        protected void ProcessFrame()
+        public void ProcessFrame()
         {
             if (exitCompleted)
                 return;
