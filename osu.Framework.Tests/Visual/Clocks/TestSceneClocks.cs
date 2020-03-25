@@ -15,7 +15,7 @@ namespace osu.Framework.Tests.Visual.Clocks
             AddStep("add framed", () => AddClock(new FramedClock()));
             AddStep("add lag", () => AddClock(new LaggyFramedClock()));
             AddStep("add interpolating", () => AddClock(new InterpolatingFramedClock()));
-            AddStep("add decoupled", () => AddClock(new DecoupleableInterpolatingFramedClock()));
+            AddStep("add decoupled", () => AddClock(new DecoupledFramedClock()));
         }
     }
 }
