@@ -18,9 +18,9 @@ namespace osu.Framework.Timing
     public class DecoupledFramedClock : InterpolatingFramedClock, IAdjustableClock
     {
         /// <summary>
-        /// Specify whether we are coupled 1:1 to SourceClock. If not, we can independently continue operation.
+        /// Whether time should stop the source clock stops.
         /// </summary>
-        public bool IsCoupled = true;
+        public bool ClampRangeToSource = true;
 
         /// <summary>
         /// In some cases we should always use the interpolated source.
@@ -71,7 +71,7 @@ namespace osu.Framework.Timing
             decoupledStopwatch.Rate = adjustableSource?.Rate ?? 1;
 
             // if interpolating based on the source, keep the decoupled clock in sync with the interpolated time.
-            if (IsCoupled && sourceRunning)
+            if (ClampRangeToSource && sourceRunning)
                 decoupledStopwatch.Seek(base.CurrentTime);
 
             // process the decoupled clock to update the current proposed time.
@@ -85,7 +85,7 @@ namespace osu.Framework.Timing
 
             if (IsRunning)
             {
-                if (IsCoupled)
+                if (ClampRangeToSource)
                 {
                     // when coupled, we want to stop when our source clock stops.
                     if (!sourceRunning)
@@ -98,7 +98,7 @@ namespace osu.Framework.Timing
                         Start();
                 }
             }
-            else if (IsCoupled && sourceRunning)
+            else if (ClampRangeToSource && sourceRunning)
             {
                 // when coupled and not running, we want to start when the source clock starts.
                 Start();
@@ -123,7 +123,7 @@ namespace osu.Framework.Timing
 
         public void Reset()
         {
-            IsCoupled = true;
+            ClampRangeToSource = true;
 
             adjustableSource?.Reset();
             decoupledStopwatch.Reset();
@@ -154,7 +154,7 @@ namespace osu.Framework.Timing
             {
                 bool success = adjustableSource?.Seek(position) != false;
 
-                if (IsCoupled)
+                if (ClampRangeToSource)
                     return success;
 
                 if (!success)

@@ -54,7 +54,7 @@ namespace osu.Framework.Tests.Clocks
         [Test]
         public void TestSourceStartedByDecoupled()
         {
-            decoupled.IsCoupled = false;
+            decoupled.ClampRangeToSource = false;
             decoupled.Start();
 
             Assert.IsTrue(source.IsRunning, "Source should be running.");
@@ -68,7 +68,7 @@ namespace osu.Framework.Tests.Clocks
         {
             decoupled.Start();
 
-            decoupled.IsCoupled = false;
+            decoupled.ClampRangeToSource = false;
             decoupled.Stop();
 
             Assert.IsFalse(source.IsRunning, "Source should not be running.");
@@ -110,7 +110,7 @@ namespace osu.Framework.Tests.Clocks
         [Test]
         public void TestDecoupledNotStartedBySourceClock()
         {
-            decoupled.IsCoupled = false;
+            decoupled.ClampRangeToSource = false;
 
             source.Start();
             decoupled.ProcessFrame();
@@ -125,7 +125,7 @@ namespace osu.Framework.Tests.Clocks
         public void TestDecoupledNotStoppedBySourceClock()
         {
             decoupled.Start();
-            decoupled.IsCoupled = false;
+            decoupled.ClampRangeToSource = false;
 
             source.Stop();
             decoupled.ProcessFrame();
@@ -167,7 +167,7 @@ namespace osu.Framework.Tests.Clocks
         [Test]
         public void TestFromNegativeCoupledMode()
         {
-            decoupled.IsCoupled = true;
+            decoupled.ClampRangeToSource = true;
             decoupled.Seek(-1000);
 
             decoupled.ProcessFrame();
@@ -182,7 +182,7 @@ namespace osu.Framework.Tests.Clocks
         [Test]
         public void TestDecoupledStartsSourceIfAllowable()
         {
-            decoupled.IsCoupled = false;
+            decoupled.ClampRangeToSource = false;
             decoupled.CustomAllowableErrorMilliseconds = 1000;
             decoupled.Seek(-50);
             decoupled.ProcessFrame();
@@ -202,7 +202,7 @@ namespace osu.Framework.Tests.Clocks
         [Test]
         public void TestForwardPlaybackDecoupledTimeDoesNotRewindAfterSourceStarts()
         {
-            decoupled.IsCoupled = false;
+            decoupled.ClampRangeToSource = false;
             decoupled.CustomAllowableErrorMilliseconds = 1000;
             decoupled.Seek(-50);
             decoupled.ProcessFrame();
@@ -226,7 +226,7 @@ namespace osu.Framework.Tests.Clocks
         public void TestBackwardPlaybackDecoupledTimeDoesNotRewindAfterSourceStarts()
         {
             source.MaxTime = 1000;
-            decoupled.IsCoupled = false;
+            decoupled.ClampRangeToSource = false;
             decoupled.CustomAllowableErrorMilliseconds = 1000;
             decoupled.Rate = -1;
 
@@ -256,7 +256,7 @@ namespace osu.Framework.Tests.Clocks
         [Test]
         public void TestDecoupledStartWithSourceOffset()
         {
-            decoupled.IsCoupled = false;
+            decoupled.ClampRangeToSource = false;
 
             source.Seek(1000);
             decoupled.Start();
@@ -300,7 +300,7 @@ namespace osu.Framework.Tests.Clocks
         [Test]
         public void TestSourceSeekedByDecoupledSeek()
         {
-            decoupled.IsCoupled = false;
+            decoupled.ClampRangeToSource = false;
             decoupled.Seek(1000);
 
             Assert.AreEqual(decoupled.CurrentTime, source.CurrentTime, "Source time should match coupled time.");
@@ -312,7 +312,7 @@ namespace osu.Framework.Tests.Clocks
         [Test]
         public void TestDecoupledNotSeekedBySourceSeekWhenStopped()
         {
-            decoupled.IsCoupled = false;
+            decoupled.ClampRangeToSource = false;
 
             source.Seek(1000);
             decoupled.ProcessFrame();
@@ -327,7 +327,7 @@ namespace osu.Framework.Tests.Clocks
         [Test]
         public void TestDecoupledNotSeekedPositivelyByFailedNegativeSeek()
         {
-            decoupled.IsCoupled = false;
+            decoupled.ClampRangeToSource = false;
             decoupled.Start();
 
             decoupled.Seek(-5000);
