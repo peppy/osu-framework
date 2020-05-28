@@ -7,12 +7,20 @@ using osuTK;
 using osuTK.Graphics;
 using osu.Framework.Graphics.Shapes;
 using osu.Framework.Allocation;
+using osu.Framework.Bindables;
 
 namespace SampleGame
 {
     public class SampleGameGame : Game
     {
         private Box box;
+
+        //private readonly BindableList<object> groups = new BindableList<object>();
+        // ^ no crash
+
+        private readonly IBindableList<object> groups = new BindableList<object>();
+        // ^ crash
+
 
         [BackgroundDependencyLoader]
         private void load()
@@ -26,9 +34,20 @@ namespace SampleGame
             });
         }
 
+        protected override void LoadComplete()
+        {
+            base.LoadComplete();
+
+            groups.GetBoundCopy();
+
+            groups.GetBoundCopy();
+            // ^ crash only on second call
+        }
+
         protected override void Update()
         {
             base.Update();
+
             box.Rotation += (float)Time.Elapsed / 10;
         }
     }

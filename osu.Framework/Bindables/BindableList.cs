@@ -626,7 +626,7 @@ namespace osu.Framework.Bindables
         IBindable IBindable.GetBoundCopy() => GetBoundCopy();
 
         IBindableList<T> IBindableList<T>.GetBoundCopy()
-            => GetBoundCopy();
+            => new BindableList<T>();
 
         /// <summary>
         /// Create a new instance of <see cref="BindableList{T}"/> and binds it to this instance.
