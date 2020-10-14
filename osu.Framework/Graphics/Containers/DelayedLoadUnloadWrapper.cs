@@ -113,7 +113,7 @@ namespace osu.Framework.Graphics.Containers
             Debug.Assert(!IsDisposed);
 
             // This code can be expensive, so only run if we haven't yet loaded.
-            if (IsIntersecting)
+            if (ValidForDisplay)
                 timeHidden = 0;
             else
                 timeHidden += unloadClock.ElapsedFrameTime;

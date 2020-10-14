@@ -72,7 +72,7 @@ namespace osu.Framework.Graphics.Containers
             // This code can be expensive, so only run if we haven't yet loaded.
             if (DelayedLoadCompleted || DelayedLoadTriggered) return;
 
-            if (!IsIntersecting)
+            if (!ValidForDisplay)
                 timeVisible = 0;
             else
                 timeVisible += Time.Elapsed;
@@ -141,7 +141,22 @@ namespace osu.Framework.Graphics.Containers
         private readonly LayoutValue isIntersectingCache = new LayoutValue(Invalidation.All);
         private ScheduledDelegate isIntersectingResetDelegate;
 
-        protected bool IsIntersecting { get; private set; }
+        /// <summary>
+        /// Whether this load wrapper is in a valid state for prompting load.
+        /// By default this is based on being "on screen". Can be overridden to bypass this behaviour.
+        /// </summary>
+        /// <returns>For load delay purposes, whether this drawable is valid for display.</returns>
+        protected virtual bool ValidForDisplay => isIntersecting;
+
+        private bool isIntersecting;
+
+        /// <summary>
+        /// Check whether this container is intersecting the closest <see cref="IOnScreenOptimisingContainer"/>.
+        /// </summary>
+        /// <param name="maskingBounds">The masking bounds provided by the hierarchy.</param>
+        /// <returns>Whether intersecting with masking region.</returns>
+        protected virtual bool CheckIsIntersecting(RectangleF maskingBounds) =>
+            maskingBounds.IntersectsWith(ScreenSpaceDrawQuad.AABBFloat) && OptimisingContainer?.ScreenSpaceDrawQuad.Intersects(ScreenSpaceDrawQuad) != false;
 
         internal IOnScreenOptimisingContainer OptimisingContainer { get; private set; }
 
@@ -158,7 +173,7 @@ namespace osu.Framework.Graphics.Containers
             // The scheduled delegate will be cancelled if this wrapper has its UpdateSubTreeMasking() invoked, as more accurate intersections can be computed there instead.
             if (isIntersectingResetDelegate == null)
             {
-                isIntersectingResetDelegate = Game?.Scheduler.AddDelayed(() => IsIntersecting = false, 0);
+                isIntersectingResetDelegate = Game?.Scheduler.AddDelayed(() => isIntersecting = false, 0);
                 result = true;
             }
 
@@ -184,9 +199,7 @@ namespace osu.Framework.Graphics.Containers
                 // The first condition is an intersection against the hierarchy, including any parents that may be masking this wrapper.
                 // It is the same calculation as Drawable.IsMaskedAway, however IsMaskedAway is optimised out for some CompositeDrawables (which this wrapper is).
                 // The second condition is an exact intersection against the optimising container, which further optimises rotated AABBs where the wrapper content is not visible.
-                IsIntersecting = maskingBounds.IntersectsWith(ScreenSpaceDrawQuad.AABBFloat)
-                                 && OptimisingContainer?.ScreenSpaceDrawQuad.Intersects(ScreenSpaceDrawQuad) != false;
-
+                isIntersecting = CheckIsIntersecting(maskingBounds);
                 isIntersectingCache.Validate();
             }
 
