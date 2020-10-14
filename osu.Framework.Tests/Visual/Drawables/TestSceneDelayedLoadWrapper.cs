@@ -8,7 +8,9 @@ using NUnit.Framework;
 using osu.Framework.Allocation;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
+using osu.Framework.Graphics.Primitives;
 using osu.Framework.Graphics.Sprites;
+using osu.Framework.Testing;
 using osuTK;
 using osuTK.Graphics;
 
@@ -16,17 +18,16 @@ namespace osu.Framework.Tests.Visual.Drawables
 {
     public class TestSceneDelayedLoadWrapper : FrameworkTestScene
     {
+        private FillFlowContainer<Container> flow;
+        private TestSceneDelayedLoadUnloadWrapper.TestScrollContainer scroll;
+        private int loaded;
+
         private const int panel_count = 2048;
 
-        [TestCase(false)]
-        [TestCase(true)]
-        public void TestManyChildren(bool instant)
+        [SetUpSteps]
+        public void SetUpSteps()
         {
-            FillFlowContainer<Container> flow = null;
-            TestSceneDelayedLoadUnloadWrapper.TestScrollContainer scroll = null;
-            int loaded = 0;
-
-            AddStep("create children", () =>
+            AddStep("create scroll container", () =>
             {
                 loaded = 0;
 
@@ -45,7 +46,15 @@ namespace osu.Framework.Tests.Visual.Drawables
                         }
                     }
                 };
+            });
+        }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void TestManyChildren(bool instant)
+        {
+            AddStep("create children", () =>
+            {
                 for (int i = 1; i < panel_count; i++)
                 {
                     flow.Add(new Container
@@ -87,6 +96,59 @@ namespace osu.Framework.Tests.Visual.Drawables
             AddStep("Remove all panels", () => flow.Clear(false));
 
             AddUntilStep("repeating schedulers removed", () => !scroll.Scheduler.HasPendingTasks);
+        }
+
+        [Test]
+        public void TestLoadOffScreen()
+        {
+            AddStep("create children", () =>
+            {
+                for (int i = 1; i < panel_count; i++)
+                {
+                    flow.Add(new Container
+                    {
+                        Size = new Vector2(128),
+                        Children = new Drawable[]
+                        {
+                            new OffScreenLoadingDelayedLoadWrapper(new Container
+                            {
+                                RelativeSizeAxes = Axes.Both,
+                                Children = new Drawable[]
+                                {
+                                    new TestBox(() => loaded++) { RelativeSizeAxes = Axes.Both }
+                                }
+                            }),
+                            new SpriteText { Text = i.ToString() },
+                        }
+                    });
+                }
+            });
+
+            var childrenWithAvatarsLoaded = new Func<IEnumerable<Drawable>>(() => flow.Children.Where(c => c.Children.OfType<DelayedLoadWrapper>().First().Content?.IsLoaded ?? false));
+
+            AddAssert("no children loaded", () => loaded == 0);
+            AddUntilStep("wait for load", () => loaded > 0);
+
+            AddAssert("all loaded", () => panel_count == loaded);
+
+            AddStep("Remove all panels", () => flow.Clear(false));
+
+            AddUntilStep("repeating schedulers removed", () => !scroll.Scheduler.HasPendingTasks);
+        }
+
+        public class OffScreenLoadingDelayedLoadWrapper : DelayedLoadWrapper
+        {
+            protected override bool ValidForDisplay => true;
+
+            protected override bool ComputeIsMaskedAway(RectangleF maskingBounds)
+            {
+                return false;
+            }
+
+            public OffScreenLoadingDelayedLoadWrapper(Drawable content, double timeBeforeLoad = 500)
+                : base(content, timeBeforeLoad)
+            {
+            }
         }
 
         public class TestBox : Container
