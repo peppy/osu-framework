@@ -31,26 +31,24 @@ namespace osu.Framework.Platform.Windows
             smallIcon = iconGroup.CreateIcon(small_icon_size, small_icon_size);
             largeIcon = iconGroup.CreateIcon(large_icon_size, large_icon_size);
 
-            var windowHandle = WindowBackend.WindowHandle;
-
-            if (windowHandle == IntPtr.Zero || largeIcon == null || smallIcon == null)
+            if (WindowHandle == IntPtr.Zero || largeIcon == null || smallIcon == null)
                 base.SetIconFromGroup(iconGroup);
             else
             {
-                SendMessage(windowHandle, seticon_message, (IntPtr)icon_small, smallIcon.Handle);
-                SendMessage(windowHandle, seticon_message, (IntPtr)icon_big, largeIcon.Handle);
+                SendMessage(WindowHandle, seticon_message, (IntPtr)icon_small, smallIcon.Handle);
+                SendMessage(WindowHandle, seticon_message, (IntPtr)icon_big, largeIcon.Handle);
             }
         }
 
         public override Point PointToClient(Point point)
         {
-            ScreenToClient(WindowBackend.WindowHandle, ref point);
+            ScreenToClient(WindowHandle, ref point);
             return point;
         }
 
         public override Point PointToScreen(Point point)
         {
-            ClientToScreen(WindowBackend.WindowHandle, ref point);
+            ClientToScreen(WindowHandle, ref point);
             return point;
         }
 

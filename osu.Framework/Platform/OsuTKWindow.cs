@@ -92,6 +92,7 @@ namespace osu.Framework.Platform
                 var display = CurrentDisplayDevice;
                 return new DisplayMode(null, new Size(display.Width, display.Height), display.BitsPerPixel, (int)Math.Round(display.RefreshRate), 0, 0);
             }
+            set => throw new NotImplementedException();
         }
 
         /// <summary>

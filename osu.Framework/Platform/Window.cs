@@ -22,19 +22,9 @@ namespace osu.Framework.Platform
     /// </summary>
     public abstract class Window : IWindow
     {
-        protected readonly IWindowBackend WindowBackend;
         protected readonly IGraphicsBackend GraphicsBackend;
 
         #region Properties
-
-        /// <summary>
-        /// Gets and sets the window title.
-        /// </summary>
-        public string Title
-        {
-            get => WindowBackend.Title;
-            set => WindowBackend.Title = value;
-        }
 
         /// <summary>
         /// Enables or disables vertical sync.
@@ -44,18 +34,6 @@ namespace osu.Framework.Platform
             get => GraphicsBackend.VerticalSync;
             set => GraphicsBackend.VerticalSync = value;
         }
-
-        /// <summary>
-        /// Returns true if window has been created.
-        /// Returns false if the window has not yet been created, or has been closed.
-        /// </summary>
-        public bool Exists => WindowBackend.Exists;
-
-        public Display PrimaryDisplay => WindowBackend.PrimaryDisplay;
-
-        public DisplayMode CurrentDisplayMode => WindowBackend.CurrentDisplayMode;
-
-        public IEnumerable<Display> Displays => WindowBackend.Displays;
 
         public WindowMode DefaultWindowMode => Configuration.WindowMode.Windowed;
 
@@ -130,11 +108,6 @@ namespace osu.Framework.Platform
         public event Action Update;
 
         /// <summary>
-        /// Invoked after the window has resized.
-        /// </summary>
-        public event Action Resized;
-
-        /// <summary>
         /// Invoked when the user attempts to close the window.
         /// </summary>
         public event Func<bool> ExitRequested;
@@ -143,41 +116,6 @@ namespace osu.Framework.Platform
         /// Invoked when the window is about to close.
         /// </summary>
         public event Action Exited;
-
-        /// <summary>
-        /// Invoked when the window loses focus.
-        /// </summary>
-        public event Action FocusLost;
-
-        /// <summary>
-        /// Invoked when the window gains focus.
-        /// </summary>
-        public event Action FocusGained;
-
-        /// <summary>
-        /// Invoked when the window becomes visible.
-        /// </summary>
-        public event Action Shown;
-
-        /// <summary>
-        /// Invoked when the window becomes invisible.
-        /// </summary>
-        public event Action Hidden;
-
-        /// <summary>
-        /// Invoked when the mouse cursor enters the window.
-        /// </summary>
-        public event Action MouseEntered;
-
-        /// <summary>
-        /// Invoked when the mouse cursor leaves the window.
-        /// </summary>
-        public event Action MouseLeft;
-
-        /// <summary>
-        /// Invoked when the window moves.
-        /// </summary>
-        public event Action<Point> Moved;
 
         /// <summary>
         /// Invoked when the user scrolls the mouse wheel over the window.
@@ -239,16 +177,10 @@ namespace osu.Framework.Platform
         #region Event Invocation
 
         protected virtual void OnUpdate() => Update?.Invoke();
-        protected virtual void OnResized() => Resized?.Invoke();
+        protected virtual void OnResized(Size size) { }
         protected virtual bool OnExitRequested() => ExitRequested?.Invoke() ?? false;
         protected virtual void OnExited() => Exited?.Invoke();
-        protected virtual void OnFocusLost() => FocusLost?.Invoke();
-        protected virtual void OnFocusGained() => FocusGained?.Invoke();
-        protected virtual void OnShown() => Shown?.Invoke();
-        protected virtual void OnHidden() => Hidden?.Invoke();
-        protected virtual void OnMouseEntered() => MouseEntered?.Invoke();
-        protected virtual void OnMouseLeft() => MouseLeft?.Invoke();
-        protected virtual void OnMoved(Point point) => Moved?.Invoke(point);
+        protected virtual void OnMoved(Point point) { }
         protected virtual void OnMouseWheel(Vector2 delta, bool precise) => MouseWheel?.Invoke(delta, precise);
         protected virtual void OnMouseMove(Vector2 position) => MouseMove?.Invoke(position);
         protected virtual void OnMouseDown(MouseButton button) => MouseDown?.Invoke(button);
@@ -264,18 +196,12 @@ namespace osu.Framework.Platform
         #endregion
 
         /// <summary>
-        /// Creates an instance of <see cref="IWindowBackend"/> for the platform.
-        /// </summary>
-        protected abstract IWindowBackend CreateWindowBackend();
-
-        /// <summary>
         /// Creates an instance of <see cref="IGraphicsBackend"/> for the platform.
         /// </summary>
         protected abstract IGraphicsBackend CreateGraphicsBackend();
 
         protected Window()
         {
-            WindowBackend = CreateWindowBackend();
             GraphicsBackend = CreateGraphicsBackend();
 
             SupportedWindowModes = new BindableList<WindowMode>(DefaultSupportedWindowModes);
@@ -285,83 +211,28 @@ namespace osu.Framework.Platform
 
             CursorState.ValueChanged += evt =>
             {
-                WindowBackend.CursorVisible = !evt.NewValue.HasFlag(Platform.CursorState.Hidden);
-                WindowBackend.CursorConfined = evt.NewValue.HasFlag(Platform.CursorState.Confined);
-            };
-
-            WindowState.ValueChanged += evt => WindowBackend.WindowState = evt.NewValue;
-
-            Visible.ValueChanged += visible_ValueChanged;
-
-            focused.ValueChanged += evt =>
-            {
-                isActive.Value = evt.NewValue;
-
-                if (evt.NewValue)
-                    OnFocusGained();
-                else
-                    OnFocusLost();
-            };
-
-            cursorInWindow.ValueChanged += evt =>
-            {
-                if (evt.NewValue)
-                    OnMouseEntered();
-                else
-                    OnMouseLeft();
+                CursorVisible = !evt.NewValue.HasFlag(Platform.CursorState.Hidden);
+                CursorConfined = evt.NewValue.HasFlag(Platform.CursorState.Confined);
             };
         }
-
-        /// <summary>
-        /// Starts the window's run loop.
-        /// </summary>
-        public void Run() => WindowBackend.Run();
-
-        /// <summary>
-        /// Attempts to close the window.
-        /// </summary>
-        public void Close() => WindowBackend.RequestClose();
 
         /// <summary>
         /// Creates the concrete window implementation and initialises the graphics backend.
         /// </summary>
         public void Create()
         {
-            WindowBackend.Create();
-
-            WindowBackend.Resized += windowBackend_Resized;
-            WindowBackend.WindowStateChanged += windowBackend_WindowStateChanged;
-            WindowBackend.Moved += windowBackend_Moved;
-            WindowBackend.Hidden += () => Visible.Value = false;
-            WindowBackend.Shown += () => Visible.Value = true;
-
-            WindowBackend.FocusGained += () => focused.Value = true;
-            WindowBackend.FocusLost += () => focused.Value = false;
-            WindowBackend.MouseEntered += () => cursorInWindow.Value = true;
-            WindowBackend.MouseLeft += () => cursorInWindow.Value = false;
-
-            WindowBackend.Closed += OnExited;
-            WindowBackend.CloseRequested += handleCloseRequested;
-            WindowBackend.Update += OnUpdate;
-            WindowBackend.KeyDown += OnKeyDown;
-            WindowBackend.KeyUp += OnKeyUp;
-            WindowBackend.KeyTyped += OnKeyTyped;
-            WindowBackend.JoystickAxisChanged += OnJoystickAxisChanged;
-            WindowBackend.JoystickButtonDown += OnJoystickButtonDown;
-            WindowBackend.JoystickButtonUp += OnJoystickButtonUp;
-            WindowBackend.MouseDown += OnMouseDown;
-            WindowBackend.MouseUp += OnMouseUp;
-            WindowBackend.MouseMove += OnMouseMove;
-            WindowBackend.MouseWheel += OnMouseWheel;
-            WindowBackend.DragDrop += OnDragDrop;
-
-            WindowBackend.DisplayChanged += d => CurrentDisplay.Value = d;
-
-            GraphicsBackend.Initialise(WindowBackend);
-
-            CurrentDisplay.Value = WindowBackend.CurrentDisplay;
-            CurrentDisplay.ValueChanged += evt => WindowBackend.CurrentDisplay = evt.NewValue;
+            GraphicsBackend.Initialise(this);
         }
+
+        /// <summary>
+        /// Starts the window's run loop.
+        /// </summary>
+        public abstract void Run();
+
+        /// <summary>
+        /// Attempts to close the window.
+        /// </summary>
+        public abstract void Close();
 
         private bool firstDraw = true;
 
@@ -374,7 +245,7 @@ namespace osu.Framework.Platform
 
             if (firstDraw)
             {
-                WindowBackend.Visible = Visible.Value;
+                Visible.Value = true;
                 firstDraw = false;
             }
         }
@@ -401,7 +272,7 @@ namespace osu.Framework.Platform
         private void handleCloseRequested()
         {
             if (!OnExitRequested())
-                WindowBackend.Close();
+                Close();
         }
 
         #region Bindable Handling
@@ -411,15 +282,15 @@ namespace osu.Framework.Platform
             switch (mode)
             {
                 case Configuration.WindowMode.Fullscreen:
-                    WindowBackend.WindowState = Platform.WindowState.Fullscreen;
+                    WindowState.Value = Platform.WindowState.Fullscreen;
                     break;
 
                 case Configuration.WindowMode.Borderless:
-                    WindowBackend.WindowState = Platform.WindowState.FullscreenBorderless;
+                    WindowState.Value = Platform.WindowState.FullscreenBorderless;
                     break;
 
                 case Configuration.WindowMode.Windowed:
-                    WindowBackend.WindowState = Platform.WindowState.Normal;
+                    WindowState.Value = Platform.WindowState.Normal;
                     break;
             }
         }
@@ -446,7 +317,7 @@ namespace osu.Framework.Platform
                 boundsChanging = false;
             }
 
-            OnResized();
+            OnResized(size);
         }
 
         private void windowBackend_Moved(Point point)
@@ -684,7 +555,7 @@ namespace osu.Framework.Platform
             set => Visible.Value = value;
         }
 
-        bool INativeWindow.Exists => Exists;
+        bool INativeWindow.Exists => true; //todo:check
 
         public void Run(double updateRate) => Run();
 
