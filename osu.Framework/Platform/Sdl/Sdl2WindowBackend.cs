@@ -194,22 +194,29 @@ namespace osu.Framework.Platform.Sdl
 
                 commandScheduler.Add(() =>
                 {
+                    var fullscreenMode = closestDisplayMode(currentDisplayMode);
+
                     switch (value)
                     {
                         case WindowState.Normal:
                             SDL.SDL_SetWindowFullscreen(SdlWindowHandle, (uint)SDL.SDL_bool.SDL_FALSE);
+                            SDL.SDL_SetWindowBordered(SdlWindowHandle, SDL.SDL_bool.SDL_TRUE);
                             break;
 
                         case WindowState.Fullscreen:
                             // set window display mode again, just in case if it changed from the last time we were fullscreen.
-                            var fullscreenMode = closestDisplayMode(currentDisplayMode);
                             SDL.SDL_SetWindowDisplayMode(SdlWindowHandle, ref fullscreenMode);
 
                             SDL.SDL_SetWindowFullscreen(SdlWindowHandle, (uint)SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN);
+                            SDL.SDL_SetWindowBordered(SdlWindowHandle, SDL.SDL_bool.SDL_TRUE);
                             break;
 
                         case WindowState.FullscreenBorderless:
-                            SDL.SDL_SetWindowFullscreen(SdlWindowHandle, (uint)SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP);
+                            SDL.SDL_SetWindowFullscreen(SdlWindowHandle, (uint)SDL.SDL_bool.SDL_FALSE);
+                            SDL.SDL_SetWindowBordered(SdlWindowHandle, SDL.SDL_bool.SDL_FALSE);
+
+                            SDL.SDL_SetWindowPosition(SdlWindowHandle, 0, 0);
+                            SDL.SDL_SetWindowSize(SdlWindowHandle, fullscreenMode.w + 1, fullscreenMode.h + 1);
                             break;
 
                         case WindowState.Maximised:
@@ -366,7 +373,7 @@ namespace osu.Framework.Platform.Sdl
 
                 // SDL_GetWindowDisplayMode can fail if the window was shown fullscreen on a different (especially larger) window before.
                 // if that happens, fall back to closest mode for the current display.
-                return closestDisplayMode(CurrentDisplayMode);
+                return closestDisplayMode(currentDisplayMode);
             }
         }
 

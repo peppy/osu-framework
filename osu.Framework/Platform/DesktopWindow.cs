@@ -151,6 +151,21 @@ namespace osu.Framework.Platform
             base.UpdateWindowMode(mode);
 
             ConfineMouseMode.TriggerChange();
+
+            switch (mode)
+            {
+                case Configuration.WindowMode.Windowed:
+                    // reset position to sane default
+                    RelativePosition = new Vector2((float)windowPositionX.Value, (float)windowPositionY.Value);
+                    WindowBackend.Size = sizeWindowed.Value;
+                    break;
+
+                case Configuration.WindowMode.Borderless:
+                    break;
+
+                case Configuration.WindowMode.Fullscreen:
+                    break;
+            }
         }
 
         public virtual void SetIconFromStream(Stream stream)
