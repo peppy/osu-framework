@@ -126,6 +126,7 @@ namespace osu.Framework.Platform
                         new MouseHandler(),
                         new JoystickHandler(),
                         new MidiInputHandler(),
+                        new WindowsRawInputMouseHandler(),
                     };
 
                     var defaultDisabled = new InputHandler[]
