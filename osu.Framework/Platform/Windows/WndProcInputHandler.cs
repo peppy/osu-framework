@@ -3,13 +3,13 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using NuGet.Protocol.Plugins;
 using osu.Framework.Extensions.EnumExtensions;
+using osu.Framework.Input.Handlers;
 using osu.Framework.Input.StateChanges;
-using osu.Framework.Logging;
-using osu.Framework.Platform;
+using osu.Framework.Platform.Windows.Native;
 using osuTK;
 using SDL2;
 
-namespace osu.Framework.Input.Handlers.Mouse
+namespace osu.Framework.Platform.Windows
 {
     internal abstract unsafe class WndProcInputHandler : InputHandler
     {
@@ -41,16 +41,16 @@ namespace osu.Framework.Input.Handlers.Mouse
 
             switch (message)
             {
-                case Native.WM_TOUCH:
+                case WindowsRawInput.WM_TOUCH:
                     break;
 
-                case Native.WM_INPUT:
+                case WindowsRawInput.WM_INPUT:
                 {
                     int payloadSize = sizeof(RawInput);
 
                     RawInput data;
 
-                    Native.GetRawInputData((IntPtr)lparam, RawInputCommand.Input, out data, ref payloadSize, sizeof(RawInputHeader));
+                    WindowsRawInput.GetRawInputData((IntPtr)lparam, RawInputCommand.Input, out data, ref payloadSize, sizeof(RawInputHeader));
 
                     if (data.Header.Type != RawInputType.Mouse)
                         break;

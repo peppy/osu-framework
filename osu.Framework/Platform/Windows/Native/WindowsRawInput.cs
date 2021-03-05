@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace osu.Framework.Input.Handlers.Mouse
+namespace osu.Framework.Platform.Windows.Native
 {
-    internal static class Native
+    internal static class WindowsRawInput
     {
         [DllImport(@"kernel32.dll", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
         internal static extern IntPtr GetProcAddress(IntPtr hModule, string procName);

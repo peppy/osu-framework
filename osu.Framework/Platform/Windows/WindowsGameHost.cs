@@ -6,8 +6,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using osu.Framework.Input;
 using osu.Framework.Input.Bindings;
+using osu.Framework.Input.Handlers;
 using osu.Framework.Platform.Windows.Native;
 using osuTK;
 
@@ -22,7 +24,7 @@ namespace osu.Framework.Platform.Windows
         public override string UserStoragePath => Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
 #if NET5_0
-        [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+        [SupportedOSPlatform("windows")]
 #endif
         public override bool CapsLockEnabled => Console.CapsLock;
 
@@ -40,6 +42,14 @@ namespace osu.Framework.Platform.Windows
             }
 
             base.OpenFileExternally(filename);
+        }
+
+        protected override IEnumerable<InputHandler> CreateAvailableInputHandlers()
+        {
+            return base.CreateAvailableInputHandlers().Concat(new[]
+            {
+                new WindowsRawInputMouseHandler(),
+            });
         }
 
         protected override void SetupForRun()

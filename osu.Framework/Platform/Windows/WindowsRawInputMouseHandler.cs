@@ -1,7 +1,11 @@
-﻿using osu.Framework.Platform;
+﻿using osu.Framework.Platform.Windows.Native;
 
-namespace osu.Framework.Input.Handlers.Mouse
+namespace osu.Framework.Platform.Windows
 {
+    /// <summary>
+    /// A windows specific mouse input handler which overrides the SDL2 implementation of raw input.
+    /// This is done to better handle quirks of some devices.
+    /// </summary>
     internal unsafe class WindowsRawInputMouseHandler : WndProcInputHandler
     {
         public override bool Initialize(GameHost host)
@@ -21,7 +25,7 @@ namespace osu.Framework.Input.Handlers.Mouse
                     WindowHandle = desktopWindow.WindowHandle
                 };
 
-                if (!Native.RegisterRawInputDevices(new[] { r }, 1, sizeof(RawInputDevice)))
+                if (!WindowsRawInput.RegisterRawInputDevices(new[] { r }, 1, sizeof(RawInputDevice)))
                 {
                     return false;
                 }
