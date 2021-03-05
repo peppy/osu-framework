@@ -92,7 +92,7 @@ namespace osu.Framework.Platform
 
         public Size Size { get; private set; } = new Size(default_width, default_height);
 
-        public Size ClientSize => new Size(Size.Width, Size.Height);
+        public Size ClientSize { get; private set; } = new Size(default_width, default_height);
 
         public float Scale { get; private set; }
 
@@ -447,14 +447,17 @@ namespace osu.Framework.Platform
         private void updateWindowSize()
         {
             SDL.SDL_GL_GetDrawableSize(SDLWindowHandle, out var w, out var h);
-            var newSize = new Size(w, h);
+            var drawableSize = new Size(w, h);
 
-            SDL.SDL_GetWindowSize(SDLWindowHandle, out var actualW, out var _);
+            SDL.SDL_GetWindowSize(SDLWindowHandle, out var actualW, out var actualH);
+            var actualSize = new Size(actualW, actualH);
+
             Scale = (float)w / actualW;
 
-            if (!newSize.Equals(Size))
+            if (!drawableSize.Equals(Size))
             {
-                Size = newSize;
+                Size = actualSize;
+                ClientSize = drawableSize;
 
                 ScheduleEvent(() => OnResized());
             }
@@ -544,6 +547,7 @@ namespace osu.Framework.Platform
             previousPolledPoint = new Point(x, y);
 
             var pos = WindowMode.Value == Configuration.WindowMode.Windowed ? Position : windowDisplayBounds.Location;
+
             var rx = x - pos.X;
             var ry = y - pos.Y;
 
