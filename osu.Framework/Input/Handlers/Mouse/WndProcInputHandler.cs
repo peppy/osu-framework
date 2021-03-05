@@ -39,7 +39,7 @@ namespace osu.Framework.Input.Handlers.Mouse
 
                 case Native.WM_INPUT:
                 {
-                    int dwSize = 40;
+                    int dwSize = sizeof(RawInput);
                     RawInput data;
 
                     Native.GetRawInputData((IntPtr)lparam, RawInputCommand.Input, out data, ref dwSize, sizeof(RawInputHeader));
@@ -367,23 +367,18 @@ namespace osu.Framework.Input.Handlers.Mouse
     /// <summary>
     /// Value type for raw input.
     /// </summary>
-    [StructLayout(LayoutKind.Explicit)]
     public struct RawInput
     {
         /// <summary>Header for the data.</summary>
-        [FieldOffset(0)]
         public RawInputHeader Header;
 
         /// <summary>Mouse raw input data.</summary>
-        [FieldOffset(16)]
         public RawMouse Mouse;
 
         /// <summary>Keyboard raw input data.</summary>
-        [FieldOffset(16)]
         public RawKeyboard Keyboard;
 
         /// <summary>HID raw input data.</summary>
-        [FieldOffset(16)]
         public RawInputHid Hid;
     }
 
@@ -448,51 +443,43 @@ namespace osu.Framework.Input.Handlers.Mouse
     /// <summary>
     /// Contains information about the state of the mouse.
     /// </summary>
-    [StructLayout(LayoutKind.Explicit)]
     public struct RawMouse
     {
         /// <summary>
         /// The mouse state.
         /// </summary>
-        [FieldOffset(0)]
         public RawMouseFlags Flags;
 
         /// <summary>
         /// Flags for the event.
         /// </summary>
-        [FieldOffset(4)]
         public RawMouseButtons ButtonFlags;
 
         /// <summary>
         /// If the mouse wheel is moved, this will contain the delta amount.
         /// </summary>
-        [FieldOffset(6)]
         public short ButtonData;
 
         /// <summary>
         /// Raw button data.
         /// </summary>
-        [FieldOffset(8)]
         public uint RawButtons;
 
         /// <summary>
         /// The motion in the X direction. This is signed relative motion or
         /// absolute motion, depending on the value of usFlags.
         /// </summary>
-        [FieldOffset(12)]
         public int LastX;
 
         /// <summary>
         /// The motion in the Y direction. This is signed relative motion or absolute motion,
         /// depending on the value of usFlags.
         /// </summary>
-        [FieldOffset(16)]
         public int LastY;
 
         /// <summary>
         /// The device-specific additional information for the event.
         /// </summary>
-        [FieldOffset(20)]
         public uint ExtraInformation;
     }
 
