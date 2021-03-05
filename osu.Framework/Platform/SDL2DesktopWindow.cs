@@ -90,10 +90,11 @@ namespace osu.Framework.Platform
             }
         }
 
-        /// <summary>
-        /// Returns or sets the window's internal size, before scaling.
-        /// </summary>
         public Size Size { get; private set; } = new Size(default_width, default_height);
+
+        public Size ClientSize => new Size(Size.Width, Size.Height);
+
+        public float Scale { get; private set; }
 
         /// <summary>
         /// Provides a bindable that controls the window's <see cref="CursorStateBindable"/>.
@@ -227,13 +228,6 @@ namespace osu.Framework.Platform
         /// Used to properly decide what window state to pick when switching to windowed mode (see <see cref="WindowMode"/> change event)
         /// </summary>
         private bool windowMaximised;
-
-        /// <summary>
-        /// Returns the drawable area, after scaling.
-        /// </summary>
-        public Size ClientSize => new Size(Size.Width, Size.Height);
-
-        public float Scale = 1;
 
         /// <summary>
         /// Queries the physical displays and their supported resolutions.

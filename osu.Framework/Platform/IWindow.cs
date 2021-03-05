@@ -162,9 +162,20 @@ namespace osu.Framework.Platform
         Point PointToScreen(Point point);
 
         /// <summary>
-        /// The client size of the window (excluding any window decoration/border).
+        /// The scaled size of the window (excluding any window decoration/border).
         /// </summary>
         Size ClientSize { get; }
+
+        /// <summary>
+        /// The raw pixel size of the window (excluding any window decoration/border).
+        /// </summary>
+        Size Size { get; }
+
+        /// <summary>
+        /// The current scale of the game window, compared to the host.
+        /// A value of 0.5 would mean the exposed size via <see cref="ClientSize"/> is half of the true screen pixels available and exposed via <see cref="Size"/> (aka 200% DPI scaling or "@2x").
+        /// </summary>
+        public float Scale { get; }
 
         /// <summary>
         /// The window title.

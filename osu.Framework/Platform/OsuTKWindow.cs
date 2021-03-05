@@ -327,6 +327,8 @@ namespace osu.Framework.Platform
         public void MakeCurrent() => OsuTKGameWindow.MakeCurrent();
         public void SwapBuffers() => OsuTKGameWindow.SwapBuffers();
 
+        public float Scale => (float)ClientSize.Width / Size.Width;
+
         public string Title
         {
             get => OsuTKGameWindow.Title;
