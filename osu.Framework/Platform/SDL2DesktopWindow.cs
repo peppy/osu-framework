@@ -960,8 +960,6 @@ namespace osu.Framework.Platform
             switch (windowState)
             {
                 case WindowState.Normal:
-                    Size = (sizeWindowed.Value * Scale).ToSize();
-
                     SDL.SDL_RestoreWindow(SDLWindowHandle);
                     SDL.SDL_SetWindowSize(SDLWindowHandle, sizeWindowed.Value.Width, sizeWindowed.Value.Height);
 
@@ -971,21 +969,16 @@ namespace osu.Framework.Platform
                 case WindowState.Fullscreen:
                     var closestMode = getClosestDisplayMode(sizeFullscreen.Value, currentDisplayMode.RefreshRate, currentDisplay.Index);
 
-                    Size = new Size(closestMode.w, closestMode.h);
-
                     SDL.SDL_SetWindowDisplayMode(SDLWindowHandle, ref closestMode);
                     SDL.SDL_SetWindowFullscreen(SDLWindowHandle, (uint)SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN);
                     break;
 
                 case WindowState.FullscreenBorderless:
-                    Size = SetBorderless();
+                    SetBorderless();
                     break;
 
                 case WindowState.Maximised:
                     SDL.SDL_MaximizeWindow(SDLWindowHandle);
-
-                    SDL.SDL_GL_GetDrawableSize(SDLWindowHandle, out int w, out int h);
-                    Size = new Size(w, h);
                     break;
 
                 case WindowState.Minimised:
@@ -994,6 +987,7 @@ namespace osu.Framework.Platform
             }
 
             updateMaximisedState();
+            updateWindowSize();
 
             if (SDL.SDL_GetWindowDisplayMode(SDLWindowHandle, out var mode) >= 0)
                 currentDisplayMode = new DisplayMode(mode.format.ToString(), new Size(mode.w, mode.h), 32, mode.refresh_rate, displayIndex, displayIndex);
@@ -1044,7 +1038,7 @@ namespace osu.Framework.Platform
         private void storeWindowSizeToConfig()
         {
             storingSizeToConfig = true;
-            sizeWindowed.Value = (Size / Scale).ToSize();
+            sizeWindowed.Value = ClientSize;
             storingSizeToConfig = false;
         }
 
@@ -1054,12 +1048,10 @@ namespace osu.Framework.Platform
         /// <returns>
         /// The size of the borderless window's draw area.
         /// </returns>
-        protected virtual Size SetBorderless()
+        protected virtual void SetBorderless()
         {
             // this is a generally sane method of handling borderless, and works well on macOS and linux.
             SDL.SDL_SetWindowFullscreen(SDLWindowHandle, (uint)SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP);
-
-            return currentDisplay.Bounds.Size;
         }
 
         protected void OnHidden() { }
