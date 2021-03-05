@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace osu.Framework.Input.Handlers.Mouse
 {
-    internal static unsafe partial class Native
+    internal static class Native
     {
         [DllImport(@"kernel32.dll", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
         internal static extern IntPtr GetProcAddress(IntPtr hModule, string procName);

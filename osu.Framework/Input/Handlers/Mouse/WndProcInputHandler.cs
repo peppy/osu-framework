@@ -1,10 +1,12 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using NuGet.Protocol.Plugins;
+using osu.Framework.Extensions.EnumExtensions;
+using osu.Framework.Input.StateChanges;
+using osu.Framework.Logging;
 using osu.Framework.Platform;
-using osu.Framework.Threading;
+using osuTK;
 using SDL2;
 
 namespace osu.Framework.Input.Handlers.Mouse
@@ -12,6 +14,7 @@ namespace osu.Framework.Input.Handlers.Mouse
     internal abstract unsafe class WndProcInputHandler : InputHandler
     {
         private SDL.SDL_WindowsMessageHook callback;
+        private SDL2DesktopWindow window;
 
         public override bool Initialize(GameHost host)
         {
@@ -20,12 +23,16 @@ namespace osu.Framework.Input.Handlers.Mouse
             // Get the bindables we need to determine whether to confine the mouse to window or not
             if (host.Window is SDL2DesktopWindow desktopWindow)
             {
+                window = desktopWindow;
                 SDL.SDL_SetWindowsMessageHook(callback, IntPtr.Zero);
                 return true;
             }
 
             return true;
         }
+
+        private Vector2? lastRelativePosition;
+        private IntPtr lastRelativeDevice;
 
         private IntPtr onWndProc(IntPtr userdata, IntPtr hwnd, uint message, ulong wparam, long lparam)
         {
@@ -39,39 +46,60 @@ namespace osu.Framework.Input.Handlers.Mouse
 
                 case Native.WM_INPUT:
                 {
-                    int dwSize = sizeof(RawInput);
+                    int payloadSize = sizeof(RawInput);
+
                     RawInput data;
 
-                    Native.GetRawInputData((IntPtr)lparam, RawInputCommand.Input, out data, ref dwSize, sizeof(RawInputHeader));
+                    Native.GetRawInputData((IntPtr)lparam, RawInputCommand.Input, out data, ref payloadSize, sizeof(RawInputHeader));
 
-                    switch (data.Header.Type)
+                    if (data.Header.Type != RawInputType.Mouse)
+                        break;
+
+                    var mouse = data.Mouse;
+
+                    const int raw_input_coordinate_space = 65536;
+
+                    var position = new Vector2(mouse.LastX, mouse.LastY);
+
+                    if (mouse.ExtraInformation > 0)
                     {
-                        case RawInputType.HID:
-                            break;
+                        // i'm not sure if there is a valid case where we need to handle packets with this present
+                        // but the osu!tablet fires noise events with non-zero values, which we want to ignore.
+                        break;
+                    }
 
-                        case RawInputType.Keyboard:
-                            break;
+                    // i am not sure what this 64 flag is, but it's set on the osu!tablet at very least.
+                    // using it here as a method of determining where the coordinate space is incorrect.
+                    if (((int)mouse.Flags & 64) > 0)
+                    {
+                        // tablets that provide raw input in screen space instead of 0..65536
+                        PendingInputs.Enqueue(new MousePositionAbsoluteInput { Position = position });
+                    }
+                    else
+                    {
+                        position /= raw_input_coordinate_space;
+                        position = new Vector2(position.X * window.ClientSize.Width, position.Y * window.ClientSize.Height);
 
-                        case RawInputType.Mouse:
-                            break;
+                        if (mouse.Flags.HasFlagFast(RawMouseFlags.MoveAbsolute))
+                        {
+                            PendingInputs.Enqueue(new MousePositionAbsoluteInput { Position = position });
+                        }
+                        else
+                        {
+                            if (lastRelativeDevice != data.Header.Device)
+                            {
+                                // if the relative data is coming from a new device, forget the last coordinate.
+                                lastRelativePosition = null;
+                                lastRelativeDevice = data.Header.Device;
+                            }
 
-                        default:
-                            Debug.Print("wm_input: " + data.Header.Type);
-                            break;
+                            lastRelativePosition ??= position;
+                            PendingInputs.Enqueue(new MousePositionRelativeInput { Delta = new Vector2(mouse.LastX - lastRelativePosition.Value.X, mouse.LastY - lastRelativePosition.Value.Y) });
+                        }
                     }
 
                     break;
                 }
-
-                case Native.WM_POINTERUPDATE:
-                case Native.WM_POINTERDOWN:
-                case Native.WM_POINTERUP:
-                case Native.WM_POINTERENTER:
-                case Native.WM_POINTERLEAVE:
-                case Native.WM_POINTERCAPTURECHANGED:
-                case Native.WM_POINTERWHEEL:
-                case Native.WM_POINTERHWHEEL:
-                    break;
             }
 
             return IntPtr.Zero;
