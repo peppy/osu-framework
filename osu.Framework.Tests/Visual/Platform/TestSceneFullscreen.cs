@@ -140,7 +140,7 @@ namespace osu.Framework.Tests.Visual.Platform
         {
             base.Update();
 
-            currentActualSize.Text = $"Window size: {window?.ClientSize}";
+            currentActualSize.Text = $"Scaled size: {window?.ClientSize} Raw size: {window?.Size} Scale: {window?.Scale}";
             currentDisplayMode.Text = $"Display mode: {window?.CurrentDisplayMode}";
         }
 
