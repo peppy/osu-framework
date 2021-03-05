@@ -109,6 +109,12 @@ namespace osu.Framework.Input.Handlers.Mouse
 
         private void handleMouseMoveRelative(Vector2 delta)
         {
+            // for the time being, don't handle relative input events from SDL.
+            // these are handled by WndProcInputHandler to allow for better tablet support.
+            // todo: replace with a non-static check?
+            if (RuntimeInfo.OS == RuntimeInfo.Platform.Windows)
+                return;
+
             enqueueInput(new MousePositionRelativeInput { Delta = delta * (float)Sensitivity.Value });
         }
 
