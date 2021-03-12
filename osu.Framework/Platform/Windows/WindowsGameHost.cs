@@ -54,7 +54,12 @@ namespace osu.Framework.Platform.Windows
                        .Concat(new InputHandler[]
                        {
                            rawInputHandler = new WindowsRawInputMouseHandler(),
-                           new WindowsMouseHandler(() => rawInputHandler.IsActive),
+                           new WindowsMouseHandler(() => rawInputHandler.IsActive)
+                           {
+                               // this handler is supposed to be quite an internal implementation.
+                               // consumers should still be able to adjust the sensitivity via MouseHandler and have it propagate over.
+                               Sensitivity = { BindTarget = rawInputHandler.Sensitivity }
+                           }
                        });
         }
 
