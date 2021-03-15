@@ -152,11 +152,12 @@ namespace osu.Framework.Configuration
             Bindable<TValue> bindable = GetOriginalBindable<TValue>(lookup);
 
             if (bindable == null)
+            {
                 bindable = set(lookup, value);
+                bindable.Default = value;
+            }
             else
                 bindable.Value = value;
-
-            bindable.Default = value;
 
             return bindable;
         }
