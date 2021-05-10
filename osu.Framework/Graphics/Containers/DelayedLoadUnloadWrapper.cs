@@ -123,7 +123,7 @@ namespace osu.Framework.Graphics.Containers
                 else
                 {
                     Debug.Assert(Content.LoadState == LoadState.Ready);
-                    DisposeChildAsync(Content); // Content not added, only need to dispose.
+                    DisposeChild(Content); // Content not added, only need to dispose.
                 }
 
                 Content = null;

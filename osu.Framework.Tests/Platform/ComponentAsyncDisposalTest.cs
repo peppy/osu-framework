@@ -50,7 +50,7 @@ namespace osu.Framework.Tests.Platform
             game.Schedule(() =>
             {
                 game.ClearInternal(false);
-                game.DisposeChildAsync(container);
+                game.DisposeChild(container);
             });
 
             game.Exit();

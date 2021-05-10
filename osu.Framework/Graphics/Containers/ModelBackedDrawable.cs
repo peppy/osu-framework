@@ -108,7 +108,7 @@ namespace osu.Framework.Graphics.Containers
             if (currentWrapper?.DelayedLoadCompleted == false)
             {
                 RemoveInternal(currentWrapper);
-                DisposeChildAsync(currentWrapper);
+                DisposeChild(currentWrapper);
             }
 
             currentWrapper = createWrapper(createDrawableFunc, LoadDelay);

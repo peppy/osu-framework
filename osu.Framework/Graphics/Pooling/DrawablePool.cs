@@ -134,7 +134,7 @@ namespace osu.Framework.Graphics.Pooling
 
                 // then attempt disposal.
                 if (poolableDrawable.DisposeOnDeathRemoval)
-                    DisposeChildAsync(poolableDrawable);
+                    DisposeChild(poolableDrawable);
 
                 return false;
             }

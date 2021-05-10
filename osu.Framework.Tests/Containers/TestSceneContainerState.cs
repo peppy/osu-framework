@@ -231,8 +231,7 @@ namespace osu.Framework.Tests.Containers
             AddUntilStep("wait until loading", () => drawable.LoadState == LoadState.Loading);
 
             // Make the async disposal queue attempt to dispose the drawable
-            AddStep("enqueue async disposal", () => AsyncDisposalQueue.Enqueue(drawable));
-            AddWaitStep("wait for disposal task to run", 10);
+            AddStep("dispose", () => drawable.Dispose());
 
             // Clear the contents of the drawable, causing a second async disposal
             AddStep("allow load", () => drawable.AllowLoad.Set());
