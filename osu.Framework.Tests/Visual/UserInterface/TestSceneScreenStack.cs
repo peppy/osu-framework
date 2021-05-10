@@ -18,6 +18,7 @@ using osu.Framework.Testing.Input;
 using osu.Framework.Utils;
 using osuTK;
 using osuTK.Graphics;
+using osuTK.Graphics.ES10;
 using osuTK.Input;
 
 namespace osu.Framework.Tests.Visual.UserInterface
@@ -31,6 +32,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         public void SetupTest() => Schedule(() =>
         {
             Clear();
+
             Add(stack = new ScreenStack(baseScreen = new TestScreen())
             {
                 RelativeSizeAxes = Axes.Both
@@ -898,6 +900,12 @@ namespace osu.Framework.Tests.Visual.UserInterface
             {
                 if (!AllowLoad.Wait(TimeSpan.FromSeconds(10)))
                     throw new TimeoutException();
+            }
+
+            protected override void Dispose(bool isDisposing)
+            {
+                AllowLoad.Set();
+                base.Dispose(isDisposing);
             }
         }
 
