@@ -168,12 +168,30 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        public void TestNestedMenuStaysOnScreen()
+        {
+            Drawable box = null;
+
+            addBoxStep(b => box = b, 5, 10);
+            clickBoxStep(() => box);
+
+            AddStep("move box across screen", () => box.MoveTo(new Vector2(0, DrawHeight / 2), 1000, Easing.OutQuint));
+            AddWaitStep("wait for movement to end", 5);
+
+            // check top level menu
+            assertMenuOnScreen(true, () => contextMenuContainer.CurrentMenu.ChildrenOfType<Menu>().First());
+
+            // check nested menu
+            assertMenuOnScreen(true, () => contextMenuContainer.CurrentMenu.ChildrenOfType<Menu>().Last());
+        }
+
+        [Test]
         public void TestReturnNullInNestedDrawableOpensParentMenu()
         {
             Drawable box2 = null;
 
             addBoxStep(_ => { }, 2);
-            addBoxStep(b => box2 = b, null);
+            addBoxStep(b => box2 = b, null, Array.Empty<Action>());
 
             clickBoxStep(() => box2);
             assertMenuState(true);
@@ -186,7 +204,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
             Drawable box2 = null;
 
             addBoxStep(_ => { }, 2);
-            addBoxStep(b => box2 = b);
+            addBoxStep(b => box2 = b, Array.Empty<Action>(), Array.Empty<Action>());
 
             clickBoxStep(() => box2);
             assertMenuState(false);
@@ -210,13 +228,13 @@ namespace osu.Framework.Tests.Visual.UserInterface
             });
         }
 
-        private void addBoxStep(Action<Drawable> boxFunc, int actionCount) => addBoxStep(boxFunc, Enumerable.Repeat(new Action(() => { }), actionCount).ToArray());
+        private void addBoxStep(Action<Drawable> boxFunc, int actionCount, int subActionCount = 0) => addBoxStep(boxFunc, Enumerable.Repeat(new Action(() => { }), actionCount).ToArray(), Enumerable.Repeat(new Action(() => { }), subActionCount).ToArray());
 
-        private void addBoxStep(Action<Drawable> boxFunc, params Action[] actions)
+        private void addBoxStep(Action<Drawable> boxFunc, Action[] actions, Action[] subActions)
         {
             AddStep("add box", () =>
             {
-                var box = new BoxWithContextMenu(actions)
+                var box = new BoxWithContextMenu(actions, subActions)
                 {
                     Anchor = Anchor.Centre,
                     Origin = Anchor.Centre,
@@ -234,10 +252,10 @@ namespace osu.Framework.Tests.Visual.UserInterface
         private void assertMenuInCentre(Func<Drawable> getBoxFunc)
             => AddAssert("menu in centre of box", () => Precision.AlmostEquals(contextMenuContainer.CurrentMenu.ScreenSpaceDrawQuad.TopLeft, getBoxFunc().ScreenSpaceDrawQuad.Centre));
 
-        private void assertMenuOnScreen(bool expected) => AddAssert($"menu {(expected ? "on" : "off")} screen", () =>
+        private void assertMenuOnScreen(bool expected, Func<Drawable> menuContainer = null) => AddAssert($"menu {(expected ? "on" : "off")} screen", () =>
         {
             var inputQuad = InputManager.ScreenSpaceDrawQuad;
-            var menuQuad = contextMenuContainer.CurrentMenu.ScreenSpaceDrawQuad;
+            var menuQuad = (menuContainer?.Invoke() ?? contextMenuContainer.CurrentMenu).ScreenSpaceDrawQuad;
 
             bool result = inputQuad.Contains(menuQuad.TopLeft + new Vector2(1, 1))
                           && inputQuad.Contains(menuQuad.TopRight + new Vector2(-1, 1))
@@ -252,13 +270,29 @@ namespace osu.Framework.Tests.Visual.UserInterface
         private class BoxWithContextMenu : Box, IHasContextMenu
         {
             private readonly Action[] actions;
+            private readonly Action[] subActions;
 
-            public BoxWithContextMenu(Action[] actions)
+            public BoxWithContextMenu(Action[] actions, Action[] subActions)
             {
                 this.actions = actions;
+                this.subActions = subActions;
             }
 
-            public MenuItem[] ContextMenuItems => actions?.Select((a, i) => new MenuItem($"Item {i}", a)).ToArray();
+            public MenuItem[] ContextMenuItems
+            {
+                get
+                {
+                    var items = actions?.Select((a, i) => new MenuItem($"Item {i}", a)).ToArray();
+
+                    if (items != null)
+                    {
+                        foreach (var item in items)
+                            item.Items = subActions.Select((a, i) => new MenuItem($"SubItem {i}", a)).ToArray();
+                    }
+
+                    return items;
+                }
+            }
         }
 
         private class TestContextMenuContainer : BasicContextMenuContainer
