@@ -6,15 +6,15 @@ using System.Collections.Generic;
 using System.Linq;
 using osu.Framework.Extensions.EnumExtensions;
 using osu.Framework.Extensions.IEnumerableExtensions;
-using osuTK.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Graphics.Shapes;
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Input.Events;
 using osu.Framework.Layout;
-using osu.Framework.Utils;
 using osu.Framework.Threading;
+using osu.Framework.Utils;
 using osuTK;
+using osuTK.Graphics;
 using osuTK.Input;
 
 namespace osu.Framework.Graphics.UserInterface
@@ -86,7 +86,7 @@ namespace osu.Framework.Graphics.UserInterface
                 MaskingContainer = new Container
                 {
                     Name = "Our contents",
-                    RelativeSizeAxes = Axes.Both,
+                    AutoSizeAxes = Axes.Both,
                     Masking = true,
                     Children = new Drawable[]
                     {
@@ -97,7 +97,6 @@ namespace osu.Framework.Graphics.UserInterface
                         },
                         ContentContainer = CreateScrollContainer(direction).With(d =>
                         {
-                            d.RelativeSizeAxes = Axes.Both;
                             d.Masking = false;
                             d.Child = ItemsContainer = new FillFlowContainer<DrawableMenuItem> { Direction = direction == Direction.Horizontal ? FillDirection.Horizontal : FillDirection.Vertical };
                         })
@@ -106,7 +105,7 @@ namespace osu.Framework.Graphics.UserInterface
                 submenuContainer = new Container<Menu>
                 {
                     Name = "Sub menu container",
-                    AutoSizeAxes = Axes.Both
+                    AutoSizeAxes = Axes.Both,
                 }
             };
 
@@ -127,10 +126,27 @@ namespace osu.Framework.Graphics.UserInterface
             AddLayout(sizeCache);
         }
 
+        public new Axes AutoSizeAxes
+        {
+            get => base.AutoSizeAxes;
+            set
+            {
+                if (value.HasFlagFast(Axes.X))
+                    RelativeSizeAxes &= ~Axes.X;
+
+                if (value.HasFlagFast(Axes.Y))
+                    RelativeSizeAxes &= ~Axes.Y;
+
+                base.AutoSizeAxes = value;
+            }
+        }
+
         protected override void LoadComplete()
         {
             base.LoadComplete();
             updateState();
+
+            AutoSizeAxes = Axes.Both;
         }
 
         /// <summary>
@@ -381,7 +397,10 @@ namespace osu.Framework.Graphics.UserInterface
         /// Resizes this <see cref="Menu"/>.
         /// </summary>
         /// <param name="newSize">The new size.</param>
-        protected virtual void UpdateSize(Vector2 newSize) => Size = newSize;
+        protected virtual void UpdateSize(Vector2 newSize)
+        {
+            ContentContainer.Size = newSize;
+        }
 
         #region Hover/Focus logic
 

@@ -210,6 +210,7 @@ namespace osu.Framework.Graphics.UserInterface
                 AutoSizeAxes = Axes.Y
             };
 
+            Menu.AutoSizeAxes = Axes.Y;
             Menu.RelativeSizeAxes = Axes.X;
 
             Header.Action = Menu.Toggle;
