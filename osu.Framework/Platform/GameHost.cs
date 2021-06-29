@@ -299,10 +299,6 @@ namespace osu.Framework.Platform
             // To avoid this, pause the exceptioning thread until the rethrow takes place.
             waitForThrow();
 
-            // schedule an exit to the input thread.
-            // this is required for single threaded execution, else the draw thread may get stuck looping before the above schedule finishes.
-            PerformExit(false);
-
             void waitForThrow()
             {
                 // This is bypassed for sources in a few situations where deadlocks can occur:

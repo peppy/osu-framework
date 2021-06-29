@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using osu.Framework.Allocation;
+using osu.Framework.Configuration;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Graphics.Shapes;
@@ -207,6 +208,8 @@ namespace osu.Framework.Tests.Exceptions
                             storage = host.Storage;
                             host.UpdateThread.Scheduler.AddDelayed(() =>
                             {
+                                host.Dependencies.Get<FrameworkConfigManager>().SetValue(FrameworkSetting.ExecutionMode, ExecutionMode.SingleThread);
+
                                 if (exitCondition?.Invoke(game) == true)
                                     host.Exit();
                             }, 0, true);
