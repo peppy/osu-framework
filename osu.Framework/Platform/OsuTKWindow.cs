@@ -82,11 +82,11 @@ namespace osu.Framework.Platform
 
         public virtual Display PrimaryDisplay => Displays.FirstOrDefault(d => d.Index == (int)DisplayDevice.Default.GetIndex());
 
-        public Bindable<Display> CurrentDisplayBindable { get; } = new Bindable<Display>();
+        public Bindable<Display> CurrentDisplay { get; } = new Bindable<Display>();
 
         /// <summary>
         /// osuTK's reference to the current <see cref="DisplayResolution"/> instance is private.
-        /// Instead we construct a <see cref="DisplayMode"/> based on the metrics of <see cref="CurrentDisplayBindable"/>,
+        /// Instead we construct a <see cref="DisplayMode"/> based on the metrics of <see cref="CurrentDisplay"/>,
         /// as it defers to the current resolution. Note that we round the refresh rate, as osuTK can sometimes
         /// report refresh rates such as 59.992863 where SDL2 will report 60.
         /// </summary>
@@ -107,7 +107,7 @@ namespace osu.Framework.Platform
             OsuTKGameWindow = osuTKGameWindow;
             OsuTKGameWindow.KeyDown += OnKeyDown;
 
-            CurrentDisplayBindable.Value = PrimaryDisplay;
+            CurrentDisplay.Value = PrimaryDisplay;
 
             // Moving or resizing the window needs to check to see if we've moved to a different display.
             // This will update the CurrentDisplay bindable.
@@ -249,8 +249,8 @@ namespace osu.Framework.Platform
         private void checkCurrentDisplay()
         {
             int index = (int)CurrentDisplayDevice.GetIndex();
-            if (index != CurrentDisplayBindable.Value?.Index)
-                CurrentDisplayBindable.Value = Displays.ElementAtOrDefault(index);
+            if (index != CurrentDisplay.Value?.Index)
+                CurrentDisplay.Value = Displays.ElementAtOrDefault(index);
         }
 
         private string getVersionNumberSubstring(string version)

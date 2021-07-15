@@ -8,7 +8,6 @@ using osu.Framework.Configuration.Tracking;
 using osu.Framework.Extensions;
 using osu.Framework.Input;
 using osu.Framework.Platform;
-using osuTK;
 
 namespace osu.Framework.Configuration
 {
@@ -27,7 +26,7 @@ namespace osu.Framework.Configuration
             SetDefault(FrameworkSetting.ExecutionMode, ExecutionMode.MultiThreaded);
             SetDefault(FrameworkSetting.WindowedPositionX, 0.5, -0.5, 1.5);
             SetDefault(FrameworkSetting.WindowedPositionY, 0.5, -0.5, 1.5);
-            SetDefault(FrameworkSetting.LastDisplayDevice, DisplayIndex.Default);
+            SetDefault(FrameworkSetting.LastDisplayDevice, -1);
             SetDefault(FrameworkSetting.AudioDevice, string.Empty);
             SetDefault(FrameworkSetting.VolumeUniversal, 1.0, 0.0, 1.0, 0.01);
             SetDefault(FrameworkSetting.VolumeMusic, 1.0, 0.0, 1.0, 0.01);

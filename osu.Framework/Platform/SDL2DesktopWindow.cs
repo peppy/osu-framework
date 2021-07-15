@@ -159,7 +159,10 @@ namespace osu.Framework.Platform
             set => CursorStateBindable.Value = value;
         }
 
-        public Bindable<Display> CurrentDisplayBindable { get; } = new Bindable<Display>();
+        public Bindable<Display> CurrentDisplay { get; } = new Bindable<Display>();
+
+        private Display currentDisplay;
+        private int displayIndex = -1;
 
         public Bindable<WindowMode> WindowMode { get; } = new Bindable<WindowMode>();
 
@@ -273,14 +276,6 @@ namespace osu.Framework.Platform
         /// </summary>
         public virtual Display PrimaryDisplay => Displays.First();
 
-        private Display currentDisplay;
-        private int displayIndex = -1;
-
-        /// <summary>
-        /// Gets or sets the <see cref="Display"/> that this window is currently on.
-        /// </summary>
-        public Display CurrentDisplay { get; private set; }
-
         public readonly Bindable<ConfineMouseMode> ConfineMouseMode = new Bindable<ConfineMouseMode>();
 
         private DisplayMode currentDisplayMode;
@@ -370,7 +365,7 @@ namespace osu.Framework.Platform
         private readonly BindableSize sizeWindowed = new BindableSize();
         private readonly BindableDouble windowPositionX = new BindableDouble();
         private readonly BindableDouble windowPositionY = new BindableDouble();
-        private readonly Bindable<DisplayIndex> windowDisplayIndexBindable = new Bindable<DisplayIndex>();
+        private readonly Bindable<int> windowDisplayIndexBindable = new Bindable<int>();
 
         public SDL2DesktopWindow()
         {
@@ -977,10 +972,7 @@ namespace osu.Framework.Platform
             {
                 displayIndex = newDisplayIndex;
                 currentDisplay = Displays.ElementAtOrDefault(displayIndex) ?? PrimaryDisplay;
-                ScheduleEvent(() =>
-                {
-                    CurrentDisplayBindable.Value = currentDisplay;
-                });
+                ScheduleEvent(() => CurrentDisplay.Value = currentDisplay);
             }
         }
 
@@ -1052,7 +1044,7 @@ namespace osu.Framework.Platform
 
             var configPosition = new Vector2((float)windowPositionX.Value, (float)windowPositionY.Value);
 
-            var displayBounds = CurrentDisplay.Bounds;
+            var displayBounds = CurrentDisplay.Value.Bounds;
             var windowSize = sizeWindowed.Value;
             var windowX = (int)Math.Round((displayBounds.Width - windowSize.Width) * configPosition.X);
             var windowY = (int)Math.Round((displayBounds.Height - windowSize.Height) * configPosition.Y);
@@ -1065,7 +1057,7 @@ namespace osu.Framework.Platform
             if (WindowState != WindowState.Normal)
                 return;
 
-            var displayBounds = CurrentDisplay.Bounds;
+            var displayBounds = CurrentDisplay.Value.Bounds;
 
             var windowX = Position.X - displayBounds.X;
             var windowY = Position.Y - displayBounds.Y;
@@ -1133,15 +1125,21 @@ namespace osu.Framework.Platform
 
         public void SetupWindow(FrameworkConfigManager config)
         {
-            CurrentDisplayBindable.ValueChanged += evt =>
+            CurrentDisplay.ValueChanged += evt =>
             {
-                windowDisplayIndexBindable.Value = (DisplayIndex)evt.NewValue.Index;
+                windowDisplayIndexBindable.Value = evt.NewValue.Index;
                 windowPositionX.Value = 0.5;
                 windowPositionY.Value = 0.5;
             };
 
             config.BindWith(FrameworkSetting.LastDisplayDevice, windowDisplayIndexBindable);
-            windowDisplayIndexBindable.BindValueChanged(evt => CurrentDisplay = Displays.ElementAtOrDefault((int)evt.NewValue) ?? PrimaryDisplay, true);
+            windowDisplayIndexBindable.BindValueChanged(displayIndex =>
+            {
+                SDL.SDL_GetDisplayUsableBounds(displayIndex.NewValue, out var bounds);
+                SDL.SDL_SetWindowPosition(SDLWindowHandle, bounds.x, bounds.y);
+
+                CurrentDisplay.Value = Displays.ElementAtOrDefault(displayIndex.NewValue) ?? PrimaryDisplay;
+            }, true);
 
             sizeFullscreen.ValueChanged += evt =>
             {
