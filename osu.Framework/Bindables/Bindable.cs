@@ -4,12 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using osu.Framework.Extensions.TypeExtensions;
 using osu.Framework.IO.Serialization;
-using osu.Framework.Lists;
 
 namespace osu.Framework.Bindables
 {
@@ -128,10 +126,6 @@ namespace osu.Framework.Bindables
             TriggerDefaultChange(previousValue, source ?? this, true, bypassChecks);
         }
 
-        private WeakReference<Bindable<T>> weakReferenceInstance;
-
-        private WeakReference<Bindable<T>> weakReference => weakReferenceInstance ??= new WeakReference<Bindable<T>>(this);
-
         /// <summary>
         /// Creates a new bindable instance. This is used for deserialization of bindables.
         /// </summary>
@@ -150,7 +144,7 @@ namespace osu.Framework.Bindables
             value = Default = defaultValue;
         }
 
-        protected LockedWeakList<Bindable<T>> Bindings { get; private set; }
+        protected List<Bindable<T>> Bindings { get; private set; }
 
         void IBindable.BindTo(IBindable them)
         {
@@ -192,8 +186,8 @@ namespace osu.Framework.Bindables
             Default = them.Default;
             Disabled = them.Disabled;
 
-            addWeakReference(them.weakReference);
-            them.addWeakReference(weakReference);
+            addReference(them);
+            them.addReference(this);
         }
 
         /// <summary>
@@ -220,13 +214,24 @@ namespace osu.Framework.Bindables
                 onChange(Disabled);
         }
 
-        private void addWeakReference(WeakReference<Bindable<T>> weakReference)
+        private void addReference(Bindable<T> reference)
         {
-            Bindings ??= new LockedWeakList<Bindable<T>>();
-            Bindings.Add(weakReference);
+            Bindings ??= new List<Bindable<T>>();
+
+            lock (Bindings)
+            {
+                Bindings.Add(reference);
+            }
         }
 
-        private void removeWeakReference(WeakReference<Bindable<T>> weakReference) => Bindings?.Remove(weakReference);
+        private void removeReference(Bindable<T> reference)
+        {
+            if (Bindings == null)
+                return;
+
+            lock (Bindings)
+                Bindings?.Remove(reference);
+        }
 
         /// <summary>
         /// Parse an object into this instance.
@@ -277,12 +282,13 @@ namespace osu.Framework.Bindables
 
             if (propagateToBindings && Bindings != null)
             {
-                foreach (var b in Bindings)
-                {
-                    if (b == source) continue;
+                lock (Bindings)
+                    foreach (var b in Bindings)
+                    {
+                        if (b == source) continue;
 
-                    b.SetValue(previousValue, value, bypassChecks, this);
-                }
+                        b.SetValue(previousValue, value, bypassChecks, this);
+                    }
             }
 
             if (EqualityComparer<T>.Default.Equals(beforePropagation, value))
@@ -296,12 +302,13 @@ namespace osu.Framework.Bindables
 
             if (propagateToBindings && Bindings != null)
             {
-                foreach (var b in Bindings)
-                {
-                    if (b == source) continue;
+                lock (Bindings)
+                    foreach (var b in Bindings)
+                    {
+                        if (b == source) continue;
 
-                    b.SetDefaultValue(previousValue, defaultValue, bypassChecks, this);
-                }
+                        b.SetDefaultValue(previousValue, defaultValue, bypassChecks, this);
+                    }
             }
 
             if (EqualityComparer<T>.Default.Equals(beforePropagation, defaultValue))
@@ -315,12 +322,13 @@ namespace osu.Framework.Bindables
 
             if (propagateToBindings && Bindings != null)
             {
-                foreach (var b in Bindings)
-                {
-                    if (b == source) continue;
+                lock (Bindings)
+                    foreach (var b in Bindings)
+                    {
+                        if (b == source) continue;
 
-                    b.SetDisabled(disabled, bypassChecks, this);
-                }
+                        b.SetDisabled(disabled, bypassChecks, this);
+                    }
             }
 
             if (beforePropagation == disabled)
@@ -371,8 +379,8 @@ namespace osu.Framework.Bindables
             if (!(them is Bindable<T> tThem))
                 throw new InvalidCastException($"Can't unbind a bindable of type {them.GetType()} from a bindable of type {GetType()}.");
 
-            removeWeakReference(tThem.weakReference);
-            tThem.removeWeakReference(weakReference);
+            removeReference(tThem);
+            tThem.removeReference(this);
         }
 
         public string Description { get; set; }
