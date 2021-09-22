@@ -264,8 +264,12 @@ namespace osu.Framework.Threading
 
                 initializedEvent.Set();
                 state.Value = GameThreadState.Running;
+
+                InitCode?.Invoke();
             }
         }
+
+        public Action InitCode;
 
         /// <summary>
         /// Run when thread transitions into an active/processing state, at the beginning of each frame.
@@ -284,7 +288,12 @@ namespace osu.Framework.Threading
 
             if (newState.HasValue)
                 setExitState(newState.Value);
+
+            foreach (var thread in OtherRunThreads)
+                thread.RunSingleFrame();
         }
+
+        internal List<GameThread> OtherRunThreads = new List<GameThread>();
 
         /// <summary>
         /// Pause this thread. Must be run from <see cref="ThreadRunner"/> in a safe manner.
@@ -341,10 +350,13 @@ namespace osu.Framework.Threading
         protected virtual void PrepareForWork()
         {
             Debug.Assert(Thread == null);
-            createThread();
-            Debug.Assert(Thread != null);
+            Debug.Assert(!Running);
 
-            Thread.Start();
+            Thread = CreateThread();
+
+            Debug.Assert(Thread != null);
+            if (!Thread.IsAlive)
+                Thread.Start();
         }
 
         /// <summary>
@@ -381,24 +393,21 @@ namespace osu.Framework.Threading
         /// <remarks>
         /// This does not start the thread, but guarantees <see cref="Thread"/> is non-null.
         /// </remarks>
-        private void createThread()
+        protected virtual Thread CreateThread() => new Thread(RunWork)
         {
-            Debug.Assert(Thread == null);
-            Debug.Assert(!Running);
+            Name = PrefixedThreadNameFor(Name),
+            IsBackground = true,
+        };
 
-            Thread = new Thread(runWork)
-            {
-                Name = PrefixedThreadNameFor(Name),
-                IsBackground = true,
-            };
+        /// <summary>
+        /// The work loop to be run on the native thread.
+        /// </summary>
+        protected virtual void RunWork()
+        {
+            Initialize(true);
 
-            void runWork()
-            {
-                Initialize(true);
-
-                while (Running)
-                    RunSingleFrame();
-            }
+            while (Running)
+                RunSingleFrame();
         }
 
         /// <summary>

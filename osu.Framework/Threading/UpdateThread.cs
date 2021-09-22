@@ -4,6 +4,7 @@
 using osu.Framework.Statistics;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using osu.Framework.Development;
 using osu.Framework.Platform;
 
@@ -12,6 +13,8 @@ namespace osu.Framework.Threading
     public class UpdateThread : GameThread
     {
         private readonly DrawThread drawThread;
+
+        private Thread nativeThread;
 
         public UpdateThread(Action onNewFrame, DrawThread drawThread)
             : base(onNewFrame, "Update")
@@ -25,6 +28,30 @@ namespace osu.Framework.Threading
             {
                 //this was added due to the dependency on GLWrapper.MaxTextureSize begin initialised.
                 drawThread?.WaitUntilInitialized();
+            }
+        }
+
+        protected override Thread CreateThread()
+        {
+            if (nativeThread != null)
+                return nativeThread;
+
+            return nativeThread = base.CreateThread();
+        }
+
+        protected override void RunWork()
+        {
+            while (State.Value != GameThreadState.Exited)
+            {
+                if (State.Value == GameThreadState.Starting)
+                {
+                    Initialize(true);
+
+                    while (Running)
+                        RunSingleFrame();
+                }
+
+                Thread.Sleep(10);
             }
         }
 

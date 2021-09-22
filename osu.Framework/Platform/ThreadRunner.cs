@@ -102,24 +102,7 @@ namespace osu.Framework.Platform
 
             Debug.Assert(activeExecutionMode != null);
 
-            switch (activeExecutionMode.Value)
-            {
-                case ExecutionMode.SingleThread:
-                {
-                    lock (threads)
-                    {
-                        foreach (var t in threads)
-                            t.RunSingleFrame();
-                    }
-
-                    break;
-                }
-
-                case ExecutionMode.MultiThreaded:
-                    // still need to run the main/input thread on the window loop
-                    mainThread.RunSingleFrame();
-                    break;
-            }
+            mainThread.RunSingleFrame();
         }
 
         public void Start() => ensureCorrectExecutionMode();
@@ -172,10 +155,15 @@ namespace osu.Framework.Platform
 
             pauseAllThreads();
 
+            GameThread updateThread = Threads.First(t => t is UpdateThread);
+
             switch (activeExecutionMode)
             {
                 case ExecutionMode.MultiThreaded:
                 {
+                    updateThread.OtherRunThreads.Clear();
+                    updateThread.InitCode = null;
+
                     // switch to multi-threaded
                     foreach (var t in Threads)
                         t.Start();
@@ -185,12 +173,19 @@ namespace osu.Framework.Platform
 
                 case ExecutionMode.SingleThread:
                 {
-                    // switch to single-threaded.
-                    foreach (var t in Threads)
+                    var threadsToRunOnUpdateThread = Threads.Where(t => !(t is InputThread || t is UpdateThread)).ToArray();
+
+                    updateThread.OtherRunThreads.AddRange(threadsToRunOnUpdateThread);
+                    updateThread.InitCode = () =>
                     {
-                        // only throttle for the main thread
-                        t.Initialize(withThrottling: t == mainThread);
-                    }
+                        foreach (var t in threadsToRunOnUpdateThread)
+                            t.Initialize(withThrottling: false);
+                    };
+
+                    mainThread.Initialize(true);
+
+                    // switch to single-threaded.
+                    updateThread.Start();
 
                     // this is usually done in the execution loop, but required here for the initial game startup,
                     // which would otherwise leave values in an incorrect state.
@@ -211,16 +206,8 @@ namespace osu.Framework.Platform
 
         private void updateMainThreadRates()
         {
-            if (activeExecutionMode == ExecutionMode.SingleThread)
-            {
-                mainThread.ActiveHz = maximumUpdateHz;
-                mainThread.InactiveHz = maximumInactiveHz;
-            }
-            else
-            {
-                mainThread.ActiveHz = GameThread.DEFAULT_ACTIVE_HZ;
-                mainThread.InactiveHz = GameThread.DEFAULT_INACTIVE_HZ;
-            }
+            mainThread.ActiveHz = GameThread.DEFAULT_ACTIVE_HZ;
+            mainThread.InactiveHz = GameThread.DEFAULT_INACTIVE_HZ;
         }
 
         /// <summary>
