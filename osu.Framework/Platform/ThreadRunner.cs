@@ -184,8 +184,7 @@ namespace osu.Framework.Platform
 
                     mainThread.Initialize(true);
 
-                    // switch to single-threaded.
-                    updateThread.Start();
+                    StartUpdateThread();
 
                     // this is usually done in the execution loop, but required here for the initial game startup,
                     // which would otherwise leave values in an incorrect state.
@@ -195,6 +194,14 @@ namespace osu.Framework.Platform
             }
 
             updateMainThreadRates();
+        }
+
+        protected virtual void StartUpdateThread()
+        {
+            GameThread updateThread = Threads.First(t => t is UpdateThread);
+
+            // switch to single-threaded.
+            updateThread.Start();
         }
 
         private void pauseAllThreads()

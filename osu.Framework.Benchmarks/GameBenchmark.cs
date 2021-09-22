@@ -1,6 +1,7 @@
 // Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
@@ -101,10 +102,16 @@ namespace osu.Framework.Benchmarks
                 RunOnce.Set();
             }
 
+            protected override void StartUpdateThread()
+            {
+                Threads.First(t => t is UpdateThread).Initialize(false);
+            }
+
             public void RunSingleFrame()
             {
                 ExecutionMode = ExecutionMode.SingleThread;
-                base.RunMainLoop();
+                foreach (var t in Threads)
+                    t.RunSingleFrame();
             }
 
             public override void RunMainLoop()
