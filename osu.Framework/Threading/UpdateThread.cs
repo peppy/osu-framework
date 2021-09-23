@@ -33,6 +33,8 @@ namespace osu.Framework.Threading
 
         protected override Thread CreateThread()
         {
+            // To better support components which rely on remaining on the same managed thread for the lifetime of the application,
+            // avoid recycling the underlying thread on Pause operations or execution mode switches.
             if (nativeThread != null)
                 return nativeThread;
 
@@ -44,13 +46,9 @@ namespace osu.Framework.Threading
             while (State.Value != GameThreadState.Exited)
             {
                 if (State.Value == GameThreadState.Starting)
-                {
-                    Initialize(true);
+                    base.RunWork();
 
-                    while (Running)
-                        RunSingleFrame();
-                }
-
+                // as long as the target state is not exited, sleep waiting for a potential resume of execution.
                 Thread.Sleep(10);
             }
         }
