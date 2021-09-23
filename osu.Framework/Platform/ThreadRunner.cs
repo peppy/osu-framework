@@ -93,6 +93,8 @@ namespace osu.Framework.Platform
 
         private ExecutionMode? activeExecutionMode;
 
+        private bool stopRequested;
+
         public ExecutionMode ExecutionMode { private get; set; } = ExecutionMode.MultiThreaded;
 
         public virtual void RunMainLoop()
@@ -118,6 +120,11 @@ namespace osu.Framework.Platform
 
         public void Stop()
         {
+            lock (startStopLock)
+            {
+                stopRequested = true;
+            }
+
             const int thread_join_timeout = 30000;
 
             Threads.ForEach(t => t.Exit());
@@ -146,6 +153,9 @@ namespace osu.Framework.Platform
             // locking is required as this method may be called from two different threads.
             lock (startStopLock)
             {
+                if (stopRequested)
+                    return;
+
                 if (ExecutionMode == activeExecutionMode)
                     return;
 
