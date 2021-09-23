@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using NUnit.Framework;
 using osu.Framework.Platform;
-using osu.Framework.Threading;
 
 namespace osu.Framework.Benchmarks
 {
@@ -78,7 +77,7 @@ namespace osu.Framework.Benchmarks
 
             public void RunSingleFrame() => threadRunner.RunSingleFrame();
 
-            protected override ThreadRunner CreateThreadRunner(InputThread mainThread) => threadRunner = new ManualThreadRunner(mainThread);
+            protected override ThreadRunner CreateThreadRunner() => threadRunner = new ManualThreadRunner();
         }
 
         private class ManualThreadRunner : ThreadRunner
@@ -95,8 +94,7 @@ namespace osu.Framework.Benchmarks
             /// </summary>
             public readonly ManualResetEventSlim RunOnce = new ManualResetEventSlim();
 
-            public ManualThreadRunner(InputThread mainThread)
-                : base(mainThread)
+            public ManualThreadRunner()
             {
                 RunOnce.Set();
             }

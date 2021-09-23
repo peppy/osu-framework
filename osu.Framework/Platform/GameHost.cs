@@ -158,19 +158,27 @@ namespace osu.Framework.Platform
         /// </summary>
         public virtual bool CapsLockEnabled => false;
 
-        public IEnumerable<GameThread> Threads => threadRunner.Threads;
+        public IEnumerable<GameThread> Threads => threads;
+
+        private readonly List<GameThread> threads = new List<GameThread>();
 
         /// <summary>
         /// Register a thread to be monitored and tracked by this <see cref="GameHost"/>
         /// </summary>
         /// <param name="thread">The thread.</param>
-        public void RegisterThread(GameThread thread)
+        /// <param name="addToRunner">TODO</param>
+        public void RegisterThread(GameThread thread, bool addToRunner = true)
         {
-            threadRunner.AddThread(thread);
+            if (addToRunner)
+                threadRunner.AddThread(thread);
+            else
+                thread.Start();
 
             thread.IsActive.BindTo(IsActive);
             thread.UnhandledException = unhandledExceptionHandler;
             thread.Monitor.EnablePerformanceProfiling = PerformanceLogging.Value;
+
+            threads.Add(thread);
         }
 
         /// <summary>
@@ -352,12 +360,7 @@ namespace osu.Framework.Platform
 
             //wait for a potentially blocking response
             while (!response.HasValue)
-            {
-                if (ThreadSafety.ExecutionMode == ExecutionMode.SingleThread)
-                    threadRunner.RunMainLoop();
-                else
-                    Thread.Sleep(1);
-            }
+                Thread.Sleep(1);
 
             if (response ?? false)
                 return true;
@@ -588,20 +591,14 @@ namespace osu.Framework.Platform
 
             try
             {
-                threadRunner = CreateThreadRunner(InputThread = new InputThread());
+                threadRunner = CreateThreadRunner();
 
                 AppDomain.CurrentDomain.UnhandledException += unhandledExceptionHandler;
                 TaskScheduler.UnobservedTaskException += unobservedExceptionHandler;
 
-                RegisterThread(InputThread);
-
+                RegisterThread(InputThread = new InputThread(), false);
+                RegisterThread(UpdateThread = new UpdateThread(UpdateFrame, DrawThread) { Monitor = { HandleGC = true } });
                 RegisterThread(AudioThread = new AudioThread());
-
-                RegisterThread(UpdateThread = new UpdateThread(UpdateFrame, DrawThread)
-                {
-                    Monitor = { HandleGC = true },
-                });
-
                 RegisterThread(DrawThread = new DrawThread(DrawFrame, this));
 
                 Trace.Listeners.Clear();
@@ -646,7 +643,7 @@ namespace osu.Framework.Platform
 
                 DrawThread.WaitUntilInitialized();
 
-                bootstrapSceneGraph(game);
+                UpdateThread.Scheduler.Add(() => bootstrapSceneGraph(game));
 
                 frameSyncMode.TriggerChange();
 
@@ -759,7 +756,7 @@ namespace osu.Framework.Platform
             if (suspended)
                 return;
 
-            threadRunner.RunMainLoop();
+            InputThread.RunSingleFrame();
 
             inputPerformanceCollectionPeriod = inputMonitor.BeginCollecting(PerformanceCollectionType.WndProc);
         }
@@ -1108,9 +1105,8 @@ namespace osu.Framework.Platform
         /// <summary>
         /// Creates the <see cref="ThreadRunner"/> to run the threads of this <see cref="GameHost"/>.
         /// </summary>
-        /// <param name="mainThread">The main thread.</param>
         /// <returns>The <see cref="ThreadRunner"/>.</returns>
-        protected virtual ThreadRunner CreateThreadRunner(InputThread mainThread) => new ThreadRunner(mainThread);
+        protected virtual ThreadRunner CreateThreadRunner() => new ThreadRunner();
     }
 
     /// <summary>

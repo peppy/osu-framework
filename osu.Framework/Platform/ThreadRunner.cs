@@ -4,7 +4,6 @@
 // Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -22,7 +21,9 @@ namespace osu.Framework.Platform
     /// </summary>
     public class ThreadRunner
     {
-        private readonly InputThread mainThread;
+        private GameThread updateThread;
+
+        private readonly GameThread loopThread;
 
         private readonly List<GameThread> threads = new List<GameThread>();
 
@@ -57,18 +58,12 @@ namespace osu.Framework.Platform
             }
         }
 
-        private readonly object startStopLock = new object();
-
-        /// <summary>
-        /// Construct a new ThreadRunner instance.
-        /// </summary>
-        /// <param name="mainThread">The main window thread. Used for input in multi-threaded execution; all game logic in single-threaded execution.</param>
-        /// <exception cref="NotImplementedException"></exception>
-        public ThreadRunner(InputThread mainThread)
+        public ThreadRunner()
         {
-            this.mainThread = mainThread;
-            AddThread(mainThread);
+            loopThread = new GameThread(RunMainLoop, "ThreadRunner", false);
         }
+
+        private readonly object startStopLock = new object();
 
         /// <summary>
         /// Add a new non-main thread. In single-threaded execution, threads will be executed in the order they are added.
@@ -77,6 +72,8 @@ namespace osu.Framework.Platform
         {
             lock (threads)
             {
+                updateThread ??= thread;
+
                 if (!threads.Contains(thread))
                     threads.Add(thread);
             }
@@ -93,10 +90,18 @@ namespace osu.Framework.Platform
 
         private ExecutionMode? activeExecutionMode;
 
+        private bool suspended;
+
         public ExecutionMode ExecutionMode { private get; set; } = ExecutionMode.MultiThreaded;
 
         public virtual void RunMainLoop()
         {
+            if (suspended)
+            {
+                Thread.Sleep(10);
+                return;
+            }
+
             // propagate any requested change in execution mode at a safe point in frame execution
             ensureCorrectExecutionMode();
 
@@ -117,19 +122,26 @@ namespace osu.Framework.Platform
 
                 case ExecutionMode.MultiThreaded:
                     // still need to run the main/input thread on the window loop
-                    mainThread.RunSingleFrame();
+                    updateThread.RunSingleFrame();
                     break;
             }
         }
 
-        public void Start() => ensureCorrectExecutionMode();
+        public void Start()
+        {
+            suspended = false;
+            if (!loopThread.Running)
+                loopThread.Start();
+        }
 
         public void Suspend()
         {
             lock (startStopLock)
             {
                 pauseAllThreads();
+
                 activeExecutionMode = null;
+                suspended = true;
             }
         }
 
@@ -153,9 +165,11 @@ namespace osu.Framework.Platform
             });
 
             // as the input thread isn't actually handled by a thread, the above join does not necessarily mean it has been completed to an exiting state.
-            mainThread.WaitForState(GameThreadState.Exited);
+            updateThread.WaitForState(GameThreadState.Exited);
 
             ThreadSafety.ResetAllForCurrentThread();
+
+            loopThread.Exit();
         }
 
         private void ensureCorrectExecutionMode()
@@ -178,7 +192,12 @@ namespace osu.Framework.Platform
                 {
                     // switch to multi-threaded
                     foreach (var t in Threads)
-                        t.Start();
+                    {
+                        if (t == updateThread)
+                            t.Initialize(true);
+                        else
+                            t.Start();
+                    }
 
                     break;
                 }
@@ -189,7 +208,7 @@ namespace osu.Framework.Platform
                     foreach (var t in Threads)
                     {
                         // only throttle for the main thread
-                        t.Initialize(withThrottling: t == mainThread);
+                        t.Initialize(withThrottling: t == updateThread);
                     }
 
                     // this is usually done in the execution loop, but required here for the initial game startup,
@@ -211,16 +230,8 @@ namespace osu.Framework.Platform
 
         private void updateMainThreadRates()
         {
-            if (activeExecutionMode == ExecutionMode.SingleThread)
-            {
-                mainThread.ActiveHz = maximumUpdateHz;
-                mainThread.InactiveHz = maximumInactiveHz;
-            }
-            else
-            {
-                mainThread.ActiveHz = GameThread.DEFAULT_ACTIVE_HZ;
-                mainThread.InactiveHz = GameThread.DEFAULT_INACTIVE_HZ;
-            }
+            loopThread.ActiveHz = updateThread.ActiveHz = maximumUpdateHz;
+            loopThread.InactiveHz = updateThread.InactiveHz = maximumInactiveHz;
         }
 
         /// <summary>
