@@ -161,7 +161,8 @@ namespace osu.Framework.Platform
             {
                 case ExecutionMode.MultiThreaded:
                 {
-                    updateThread.DelegatedThreads.Clear();
+                    foreach (var t in Threads)
+                        t.EndDelegating();
 
                     // switch to multi-threaded
                     foreach (var t in Threads)
@@ -174,15 +175,15 @@ namespace osu.Framework.Platform
                 {
                     var threadsToRunOnUpdateThread = Threads.Where(t => !(t is InputThread || t is UpdateThread)).ToArray();
 
-                    updateThread.DelegatedThreads.AddRange(threadsToRunOnUpdateThread);
+                    foreach (var t in threadsToRunOnUpdateThread)
+                        t.BeginDelegating(updateThread);
 
-                    mainThread.Initialize(true);
-
-                    StartUpdateThread();
+                    mainThread.Start();
 
                     // this is usually done in the execution loop, but required here for the initial game startup,
                     // which would otherwise leave values in an incorrect state.
                     ThreadSafety.ResetAllForCurrentThread();
+                    StartUpdateThread();
                     break;
                 }
             }

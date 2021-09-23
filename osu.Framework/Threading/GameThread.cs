@@ -287,12 +287,31 @@ namespace osu.Framework.Threading
 
             if (newState.HasValue)
                 setExitState(newState.Value);
+        protected List<GameThread> DelegatedThreads = new List<GameThread>();
 
             foreach (var thread in DelegatedThreads)
                 thread.RunSingleFrame();
+        /// <summary>
+        /// Whether this thread's work is currently being run by another <see cref="GameThread"/>.
+        /// </summary>
+        private GameThread delegationTarget;
+
+        internal void BeginDelegating(GameThread other)
+        {
+            Debug.Assert(delegationTarget == null, $"{Name} already has a delegation target of {delegationTarget}");
+
+            delegationTarget = other;
+            delegationTarget.DelegatedThreads.Add(this);
         }
 
-        internal List<GameThread> DelegatedThreads = new List<GameThread>();
+        internal void EndDelegating()
+        {
+            if (delegationTarget == null)
+                return;
+
+            Debug.Assert(delegationTarget.DelegatedThreads.Remove(this));
+            delegationTarget = null;
+        }
 
         /// <summary>
         /// Pause this thread. Must be run from <see cref="ThreadRunner"/> in a safe manner.
