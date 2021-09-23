@@ -258,7 +258,7 @@ namespace osu.Framework.Threading
 
                 Clock.Throttling = withThrottling;
 
-                Monitor.MakeCurrent();
+                Monitor?.MakeCurrent();
 
                 updateCulture();
 
