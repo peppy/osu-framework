@@ -161,8 +161,7 @@ namespace osu.Framework.Platform
             {
                 case ExecutionMode.MultiThreaded:
                 {
-                    updateThread.OtherRunThreads.Clear();
-                    updateThread.InitCode = null;
+                    updateThread.DelegatedThreads.Clear();
 
                     // switch to multi-threaded
                     foreach (var t in Threads)
@@ -175,12 +174,7 @@ namespace osu.Framework.Platform
                 {
                     var threadsToRunOnUpdateThread = Threads.Where(t => !(t is InputThread || t is UpdateThread)).ToArray();
 
-                    updateThread.OtherRunThreads.AddRange(threadsToRunOnUpdateThread);
-                    updateThread.InitCode = () =>
-                    {
-                        foreach (var t in threadsToRunOnUpdateThread)
-                            t.Initialize(withThrottling: false);
-                    };
+                    updateThread.DelegatedThreads.AddRange(threadsToRunOnUpdateThread);
 
                     mainThread.Initialize(true);
 

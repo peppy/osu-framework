@@ -265,11 +265,10 @@ namespace osu.Framework.Threading
                 initializedEvent.Set();
                 state.Value = GameThreadState.Running;
 
-                InitCode?.Invoke();
+                foreach (var thread in DelegatedThreads)
+                    thread.Initialize(false);
             }
         }
-
-        public Action InitCode;
 
         /// <summary>
         /// Run when thread transitions into an active/processing state, at the beginning of each frame.
@@ -289,11 +288,11 @@ namespace osu.Framework.Threading
             if (newState.HasValue)
                 setExitState(newState.Value);
 
-            foreach (var thread in OtherRunThreads)
+            foreach (var thread in DelegatedThreads)
                 thread.RunSingleFrame();
         }
 
-        internal List<GameThread> OtherRunThreads = new List<GameThread>();
+        internal List<GameThread> DelegatedThreads = new List<GameThread>();
 
         /// <summary>
         /// Pause this thread. Must be run from <see cref="ThreadRunner"/> in a safe manner.
