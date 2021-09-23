@@ -285,12 +285,40 @@ namespace osu.Framework.Threading
         {
             var newState = processFrame();
 
+            if (DelegatedThreads.Count > 0)
+                processDelegatedThreads(newState);
             if (newState.HasValue)
                 setExitState(newState.Value);
+        }
+
+        private void processDelegatedThreads(GameThreadState? requiredState)
+        {
+            while (true)
+            {
+                bool allInCorrectState = true;
+
+                foreach (var thread in DelegatedThreads)
+                {
+                    thread.RunSingleFrame();
+
+                    // if a pause or suspend request is received, we still need to make sure that all the threads we are responsible have entered the requested state.
+                    if (requiredState.HasValue && thread.State.Value != requiredState)
+                    {
+                        allInCorrectState = false;
+                    }
+                }
+
+                // this is definitely not working as expected
+                if (!requiredState.HasValue)
+                    break;
+
+                if (allInCorrectState)
+                    break;
+            }
+        }
+
         protected List<GameThread> DelegatedThreads = new List<GameThread>();
 
-            foreach (var thread in DelegatedThreads)
-                thread.RunSingleFrame();
         /// <summary>
         /// Whether this thread's work is currently being run by another <see cref="GameThread"/>.
         /// </summary>
@@ -328,6 +356,10 @@ namespace osu.Framework.Threading
 
                 // actual pause will be done in ProcessFrame.
                 pauseRequested = true;
+                foreach (var t in DelegatedThreads)
+                    t.Pause();
+                if (delegationTarget != null)
+                    return;
             }
 
             WaitForState(GameThreadState.Paused);
