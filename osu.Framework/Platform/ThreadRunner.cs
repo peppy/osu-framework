@@ -156,10 +156,12 @@ namespace osu.Framework.Platform
                 if (stopRequested)
                     return;
 
-                if (ExecutionMode == activeExecutionMode)
+                var newExecutionMode = ExecutionMode; // pull in variable to local, it may change on another thread since the equality check below.
+
+                if (newExecutionMode == activeExecutionMode)
                     return;
 
-                activeExecutionMode = ThreadSafety.ExecutionMode = ExecutionMode;
+                activeExecutionMode = ThreadSafety.ExecutionMode = newExecutionMode;
                 Logger.Log($"Execution mode changed to {activeExecutionMode}");
             }
 
