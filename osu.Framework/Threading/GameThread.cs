@@ -480,7 +480,13 @@ namespace osu.Framework.Threading
 
                 switch (exitState)
                 {
+                    case GameThreadState.Paused:
+                        // without this, the volatile nature of this variable means it may have been set twice.
+                        pauseRequested = false;
+                        break;
+
                     case GameThreadState.Exited:
+                        exitRequested = false;
                         Monitor?.Dispose();
                         initializedEvent?.Dispose();
 
