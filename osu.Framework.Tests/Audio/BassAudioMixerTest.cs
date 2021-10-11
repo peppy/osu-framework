@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
+using System.Linq;
 using System.Threading;
 using ManagedBass;
 using ManagedBass.Fx;
@@ -219,10 +220,10 @@ namespace osu.Framework.Tests.Audio
         [Test]
         public void TestAddEffect()
         {
-            bass.Mixer.Effects.Add(new BQFParameters());
+            bass.Mixer.AddEffect(new BQFParameters());
             assertEffectParameters();
 
-            bass.Mixer.Effects.AddRange(new[]
+            bass.Mixer.AddEffects(new[]
             {
                 new BQFParameters(),
                 new BQFParameters(),
@@ -234,31 +235,36 @@ namespace osu.Framework.Tests.Audio
         [Test]
         public void TestRemoveEffect()
         {
-            bass.Mixer.Effects.Add(new BQFParameters());
+            BQFParameters effect;
+
+            bass.Mixer.AddEffect(effect = new BQFParameters());
             assertEffectParameters();
 
-            bass.Mixer.Effects.RemoveAt(0);
+            bass.Mixer.RemoveEffect(effect);
             assertEffectParameters();
 
-            bass.Mixer.Effects.AddRange(new[]
+            BQFParameters effect1;
+            BQFParameters effect2;
+
+            bass.Mixer.AddEffects(new[]
             {
-                new BQFParameters(),
-                new BQFParameters(),
+                effect1 = new BQFParameters(),
+                effect2 = new BQFParameters(),
                 new BQFParameters()
             });
             assertEffectParameters();
 
-            bass.Mixer.Effects.RemoveAt(1);
+            bass.Mixer.RemoveEffect(effect1);
             assertEffectParameters();
 
-            bass.Mixer.Effects.RemoveAt(1);
+            bass.Mixer.RemoveEffect(effect2);
             assertEffectParameters();
         }
 
         [Test]
         public void TestMoveEffect()
         {
-            bass.Mixer.Effects.AddRange(new[]
+            bass.Mixer.AddEffects(new[]
             {
                 new BQFParameters(),
                 new BQFParameters(),
@@ -276,22 +282,27 @@ namespace osu.Framework.Tests.Audio
         [Test]
         public void TestReplaceEffect()
         {
-            bass.Mixer.Effects.AddRange(new[]
+            BQFParameters effect1;
+
+            bass.Mixer.AddEffects(new[]
             {
-                new BQFParameters(),
+                effect1 = new BQFParameters(),
                 new BQFParameters(),
                 new BQFParameters()
             });
+
             assertEffectParameters();
 
-            bass.Mixer.Effects[1] = new BQFParameters();
+            effect1.fBandwidth = 1000;
+
+            bass.Mixer.UpdateEffect(effect1);
             assertEffectParameters();
         }
 
         [Test]
         public void TestInsertEffect()
         {
-            bass.Mixer.Effects.AddRange(new[]
+            bass.Mixer.AddEffects(new[]
             {
                 new BQFParameters(),
                 new BQFParameters()
@@ -350,13 +361,13 @@ namespace osu.Framework.Tests.Audio
         {
             bass.Update();
 
-            Assert.That(bass.Mixer.ActiveEffects.Count, Is.EqualTo(bass.Mixer.Effects.Count));
+            Assert.That(bass.Mixer.ActiveEffects.Count, Is.EqualTo(bass.Mixer.Effects.Count()));
 
             Assert.Multiple(() =>
             {
                 for (int i = 0; i < bass.Mixer.ActiveEffects.Count; i++)
                 {
-                    Assert.That(bass.Mixer.ActiveEffects[i].Effect, Is.EqualTo(bass.Mixer.Effects[i]));
+                    Assert.That(bass.Mixer.ActiveEffects[i].Effect, Is.EqualTo(bass.Mixer.Effects.ElementAt(i)));
                     Assert.That(bass.Mixer.ActiveEffects[i].Priority, Is.EqualTo(-i));
                 }
             });

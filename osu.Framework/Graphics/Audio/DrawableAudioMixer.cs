@@ -1,12 +1,12 @@
 // Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System.Collections.Generic;
 using System.Diagnostics;
 using ManagedBass;
 using osu.Framework.Allocation;
 using osu.Framework.Audio;
 using osu.Framework.Audio.Mixing;
-using osu.Framework.Bindables;
 using osu.Framework.Graphics.Containers;
 
 namespace osu.Framework.Graphics.Audio
@@ -19,10 +19,7 @@ namespace osu.Framework.Graphics.Audio
         private void load(AudioManager audio)
         {
             mixer = audio.CreateAudioMixer();
-            mixer.Effects.BindTo(Effects);
         }
-
-        public BindableList<IEffectParameter> Effects { get; } = new BindableList<IEffectParameter>();
 
         public void Add(IAudioChannel channel)
         {
@@ -51,5 +48,12 @@ namespace osu.Framework.Graphics.Audio
             base.Dispose(isDisposing);
             mixer?.Dispose();
         }
+
+        IEnumerable<IEffectParameter> IAudioMixer.Effects => ((IAudioMixer)mixer).Effects;
+        public void AddEffect(IEffectParameter effect) => mixer.AddEffect(effect);
+        public void AddEffects(IEnumerable<IEffectParameter> effects) => mixer.AddEffects(effects);
+
+        public bool RemoveEffect(IEffectParameter effect) => mixer.RemoveEffect(effect);
+        public void UpdateEffect(IEffectParameter effect) => mixer.UpdateEffect(effect);
     }
 }

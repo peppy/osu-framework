@@ -3,8 +3,8 @@
 
 #nullable enable
 
+using System.Collections.Generic;
 using ManagedBass;
-using osu.Framework.Bindables;
 using osu.Framework.Extensions.ObjectExtensions;
 
 namespace osu.Framework.Audio.Mixing
@@ -26,7 +26,12 @@ namespace osu.Framework.Audio.Mixing
             this.globalMixer = globalMixer;
         }
 
-        public abstract BindableList<IEffectParameter> Effects { get; }
+        public abstract IEnumerable<IEffectParameter> Effects { get; }
+
+        public abstract void AddEffect(IEffectParameter effect);
+        public abstract void AddEffects(IEnumerable<IEffectParameter> effects);
+        public abstract bool RemoveEffect(IEffectParameter effect);
+        public abstract void UpdateEffect(IEffectParameter effect);
 
         public void Add(IAudioChannel channel)
         {

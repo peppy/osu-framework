@@ -3,8 +3,8 @@
 
 #nullable enable
 
+using System.Collections.Generic;
 using ManagedBass;
-using osu.Framework.Bindables;
 
 namespace osu.Framework.Audio.Mixing
 {
@@ -16,12 +16,32 @@ namespace osu.Framework.Audio.Mixing
     {
         /// <summary>
         /// The effects currently applied to the mix.
-        /// <para>
-        /// Effects are stored in order of decreasing priority such that the effect at <c>index = 0</c> in the list has the highest priority
-        /// and the effect at <c>index = Count - 1</c> in the list has the lowest priority.
-        /// </para>
         /// </summary>
-        BindableList<IEffectParameter> Effects { get; }
+        IEnumerable<IEffectParameter> Effects { get; }
+
+        /// <summary>
+        /// Add a new effect to this mixer.
+        /// </summary>
+        /// <param name="effect">The effect to add.</param>
+        void AddEffect(IEffectParameter effect);
+
+        /// <summary>
+        /// Add multiple new effects to this mixer.
+        /// </summary>
+        /// <param name="effects">The effects to add.</param>
+        void AddEffects(IEnumerable<IEffectParameter> effects);
+
+        /// <summary>
+        /// Remove an effect from this mixer.
+        /// </summary>
+        /// <param name="effect">The effect to remove.</param>
+        bool RemoveEffect(IEffectParameter effect);
+
+        /// <summary>
+        /// Update an already-applied effect's parameters.
+        /// </summary>
+        /// <param name="effect">The new parameters.</param>
+        void UpdateEffect(IEffectParameter effect);
 
         /// <summary>
         /// Adds a channel to the mix.

@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using ManagedBass;
+using ManagedBass.Fx;
 using ManagedBass.Mix;
 using osu.Framework.Bindables;
 using osu.Framework.Extensions.EnumExtensions;
@@ -19,7 +20,7 @@ using osu.Framework.Statistics;
 namespace osu.Framework.Audio.Mixing.Bass
 {
     /// <summary>
-    /// Mixes together multiple <see cref="IAudioChannel"/> into one output via BASSmix.
+    /// Mixes together multiple <see cref="IAudioChannel"/> into one output via BASS mix.
     /// </summary>
     internal class BassAudioMixer : AudioMixer, IBassAudio
     {
@@ -53,7 +54,21 @@ namespace osu.Framework.Audio.Mixing.Bass
             EnqueueAction(createMixer);
         }
 
-        public override BindableList<IEffectParameter> Effects { get; } = new BindableList<IEffectParameter>();
+        public override IEnumerable<IEffectParameter> Effects => effects;
+
+        private BindableList<IEffectParameter> effects { get; } = new BindableList<IEffectParameter>();
+
+        public override void AddEffect(IEffectParameter effect) => effects.Add(effect);
+
+        public override void AddEffects(IEnumerable<IEffectParameter> items) => effects.AddRange(items);
+
+        public override bool RemoveEffect(IEffectParameter effect) => effects.Remove(effect);
+
+        public override void UpdateEffect(IEffectParameter effect)
+        {
+            // TODO: temporary, just making sure things still work.
+            effects[effects.IndexOf(effect)] = effect;
+        }
 
         protected override void AddInternal(IAudioChannel channel)
         {
@@ -293,7 +308,7 @@ namespace osu.Framework.Audio.Mixing.Bass
             foreach (var channel in toAdd)
                 AddChannelToBassMix(channel);
 
-            Effects.BindCollectionChanged(onEffectsChanged, true);
+            effects.BindCollectionChanged(onEffectsChanged, true);
 
             ManagedBass.Bass.ChannelPlay(Handle);
             HandleCreated?.Invoke(Handle);
