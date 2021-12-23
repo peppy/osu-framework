@@ -28,6 +28,8 @@ namespace osu.Framework.Tests.Visual.UserInterface
         private TestScreen baseScreen;
         private ScreenStack stack;
 
+        private const int repeat_count = 1000;
+
         private readonly List<TestScreenSlow> slowLoaders = new List<TestScreenSlow>();
 
         [SetUp]
@@ -60,6 +62,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestPushFocusLost()
         {
             TestScreen screen1 = null;
@@ -73,6 +76,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestPushFocusTransferred()
         {
             TestScreen screen1 = null, screen2 = null;
@@ -86,6 +90,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestPushStackTwice()
         {
             TestScreen testScreen = null;
@@ -96,12 +101,14 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestAddScreenWithoutStackFails()
         {
             AddStep("ensure throws", () => Assert.Throws<InvalidOperationException>(() => Add(new TestScreen())));
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestPushInstantExitScreen()
         {
             AddStep("push non-valid screen", () => baseScreen.Push(new TestScreen { ValidForPush = false }));
@@ -109,6 +116,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestPushInstantExitScreenEmpty()
         {
             AddStep("fresh stack with non-valid screen", () =>
@@ -124,6 +132,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestPushPop()
         {
             TestScreen screen1 = null, screen2 = null;
@@ -164,6 +173,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestMultiLevelExit()
         {
             TestScreen screen1 = null, screen2 = null, screen3 = null;
@@ -192,6 +202,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestAsyncPush()
         {
             TestScreenSlow screen1 = null;
@@ -204,6 +215,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestAsyncPreloadPush()
         {
             TestScreenSlow screen1 = null;
@@ -218,6 +230,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestExitBeforePush()
         {
             TestScreenSlow screen1 = null;
@@ -241,6 +254,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestScreenPushedAfterExiting()
         {
             TestScreen screen1 = null;
@@ -255,6 +269,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestPushToNonLoadedScreenFails()
         {
             TestScreenSlow screen1 = null;
@@ -264,6 +279,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestPushAlreadyLoadedScreenFails()
         {
             TestScreen screen1 = null;
@@ -276,6 +292,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestEventOrder()
         {
             List<int> order = new List<int>();
@@ -312,6 +329,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestComeVisibleFromHidden()
         {
             TestScreen screen1 = null;
@@ -400,6 +418,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestEventsNotFiredBeforeScreenLoad()
         {
             Screen screen1 = null;
@@ -419,6 +438,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestAsyncDoublePush()
         {
             TestScreenSlow screen1 = null;
@@ -463,6 +483,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestAsyncPushWithNonImmediateSuspend()
         {
             AddStep("override stack", () =>
@@ -486,6 +507,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestMakeCurrent()
         {
             TestScreen screen1 = null;
@@ -517,6 +539,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestCallingExitFromBlockingExit()
         {
             TestScreen screen1 = null;
@@ -616,6 +639,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestMakeCurrentUnbindOrder()
         {
             List<TestScreen> screens = null;
@@ -651,6 +675,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestScreensUnboundAndDisposedOnStackDisposal()
         {
             const int screen_count = 5;
@@ -706,6 +731,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         /// Make sure that all bindables are returned before OnResuming is called for the next screen.
         /// </summary>
         [Test]
+        [Repeat(repeat_count)]
         public void TestReturnBindsBeforeResume()
         {
             TestScreen screen1 = null, screen2 = null;
@@ -717,6 +743,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestMakeCurrentDuringLoad()
         {
             TestScreen screen1 = null;
@@ -735,6 +762,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestMakeCurrentDuringLoadOfMany()
         {
             TestScreen screen1 = null;
@@ -760,6 +788,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestMakeCurrentOnSameScreen()
         {
             TestScreen screen1 = null;
@@ -770,6 +799,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestPushOnExiting()
         {
             TestScreen screen1 = null;
@@ -791,6 +821,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestInvalidPushBlocksNonImmediateSuspend()
         {
             TestScreen screen1 = null;
@@ -816,6 +847,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestInvalidPushDoesNotBlockImmediateSuspend()
         {
             TestScreen screen1 = null;
@@ -849,6 +881,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         /// Push two screens and check that they only handle input when they are respectively loaded and current.
         /// </summary>
         [Test]
+        [Repeat(repeat_count)]
         public void TestNonCurrentScreenDoesNotAcceptInput()
         {
             ManualInputManager inputManager = null;
@@ -887,6 +920,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestMakeCurrentIntermediateResumes()
         {
             TestScreen screen1 = null;
@@ -907,6 +941,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         }
 
         [Test]
+        [Repeat(repeat_count)]
         public void TestGetChildScreenAndGetParentScreenReturnNullWhenNotInStack()
         {
             TestScreen screen1 = null;
@@ -926,6 +961,7 @@ namespace osu.Framework.Tests.Visual.UserInterface
         /// Ensure that an intermediary screen doesn't block and doesn't attempt to fire events when not loaded.
         /// </summary>
         [Test]
+        [Repeat(repeat_count)]
         public void TestMakeCurrentWhileScreensStillLoading()
         {
             TestScreen root = null;
