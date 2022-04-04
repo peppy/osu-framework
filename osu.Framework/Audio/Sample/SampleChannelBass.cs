@@ -36,20 +36,6 @@ namespace osu.Framework.Audio.Sample
         /// </summary>
         private volatile bool enqueuedPlaybackStart;
 
-        public override bool Looping
-        {
-            get => base.Looping;
-            set
-            {
-                base.Looping = value;
-                setLoopFlag(Looping);
-            }
-        }
-
-        private bool hasChannel => channel != 0;
-
-        public override ChannelAmplitudes CurrentAmplitudes => (bassAmplitudeProcessor ??= new BassAmplitudeProcessor(this)).CurrentAmplitudes;
-
         private readonly BassRelativeFrequencyHandler relativeFrequencyHandler;
         private BassAmplitudeProcessor? bassAmplitudeProcessor;
 
@@ -73,6 +59,47 @@ namespace osu.Framework.Audio.Sample
             };
 
             ensureChannel();
+        }
+
+        public override void Play()
+        {
+            userRequestedPlay = true;
+
+            // Pin Playing and IsAlive to true so that the channel isn't killed by the next update. This is only reset after playback is started.
+            enqueuedPlaybackStart = true;
+
+            // Bring this channel alive, allowing it to receive updates.
+            base.Play();
+
+            EnqueueAction(() =>
+            {
+                if (playInternal())
+                    playing = true;
+
+                enqueuedPlaybackStart = false;
+            });
+        }
+
+        internal override void OnStateChanged()
+        {
+            base.OnStateChanged();
+
+            if (!hasChannel)
+                return;
+
+            Bass.ChannelSetAttribute(channel, ChannelAttribute.Volume, AggregateVolume.Value);
+            Bass.ChannelSetAttribute(channel, ChannelAttribute.Pan, AggregateBalance.Value);
+            relativeFrequencyHandler.SetFrequency(AggregateFrequency.Value);
+        }
+
+        public override bool Looping
+        {
+            get => base.Looping;
+            set
+            {
+                base.Looping = value;
+                setLoopFlag(Looping);
+            }
         }
 
         protected override void UpdateState()
@@ -105,25 +132,6 @@ namespace osu.Framework.Audio.Sample
             bassAmplitudeProcessor?.Update();
         }
 
-        public override void Play()
-        {
-            userRequestedPlay = true;
-
-            // Pin Playing and IsAlive to true so that the channel isn't killed by the next update. This is only reset after playback is started.
-            enqueuedPlaybackStart = true;
-
-            // Bring this channel alive, allowing it to receive updates.
-            base.Play();
-
-            EnqueueAction(() =>
-            {
-                if (playInternal())
-                    playing = true;
-
-                enqueuedPlaybackStart = false;
-            });
-        }
-
         public override void Stop()
         {
             userRequestedPlay = false;
@@ -137,17 +145,9 @@ namespace osu.Framework.Audio.Sample
             });
         }
 
-        internal override void OnStateChanged()
-        {
-            base.OnStateChanged();
+        public override ChannelAmplitudes CurrentAmplitudes => (bassAmplitudeProcessor ??= new BassAmplitudeProcessor(this)).CurrentAmplitudes;
 
-            if (!hasChannel)
-                return;
-
-            Bass.ChannelSetAttribute(channel, ChannelAttribute.Volume, AggregateVolume.Value);
-            Bass.ChannelSetAttribute(channel, ChannelAttribute.Pan, AggregateBalance.Value);
-            relativeFrequencyHandler.SetFrequency(AggregateFrequency.Value);
-        }
+        private bool hasChannel => channel != 0;
 
         private bool playInternal()
         {
