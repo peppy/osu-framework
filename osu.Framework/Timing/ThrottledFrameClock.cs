@@ -1,4 +1,5 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
+
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
@@ -25,6 +26,8 @@ namespace osu.Framework.Timing
         /// </summary>
         public bool Throttling = true;
 
+        private double nextFrameTime;
+
         /// <summary>
         /// The time spent in a Thread.Sleep state during the last frame.
         /// </summary>
@@ -37,53 +40,47 @@ namespace osu.Framework.Timing
             base.ProcessFrame();
 
             if (Throttling)
-            {
-                if (MaximumUpdateHz > 0 && MaximumUpdateHz < double.MaxValue)
-                {
-                    throttle();
-                }
-                else
-                {
-                    // Even when running at unlimited frame-rate, we should call the scheduler
-                    // to give lower-priority background processes a chance to do work.
-                    TimeSlept = sleepAndUpdateCurrent(0);
-                }
-            }
+                throttle();
             else
-            {
                 TimeSlept = 0;
-            }
 
             Debug.Assert(TimeSlept <= ElapsedFrameTime);
         }
 
-        private double accumulatedSleepError;
-
         private void throttle()
         {
-            double excessFrameTime = 1000d / MaximumUpdateHz - ElapsedFrameTime;
+            double timeToSpare = nextFrameTime - CurrentTime;
 
-            TimeSlept = sleepAndUpdateCurrent((int)Math.Max(0, excessFrameTime + accumulatedSleepError));
-
-            accumulatedSleepError += excessFrameTime - TimeSlept;
-
-            // Never allow the sleep error to become too negative and induce too many catch-up frames
-            accumulatedSleepError = Math.Max(-1000 / 30.0, accumulatedSleepError);
-        }
-
-        private double sleepAndUpdateCurrent(double milliseconds)
-        {
-            double before = CurrentTime;
-
-            if (milliseconds > 1)
-                Thread.Sleep(new TimeSpan((int)(TimeSpan.TicksPerMillisecond * milliseconds)));
+            if (timeToSpare > 0)
+                alignTo(nextFrameTime);
             else
             {
-                while (SourceTime - before < milliseconds)
-                    new SpinWait().SpinOnce();
+                // yield, not sure if we still want this.
+                Thread.Sleep(0);
             }
 
-            return (CurrentTime = SourceTime) - before;
+            double timeAfterSleep = SourceTime;
+
+            TimeSlept = timeAfterSleep - CurrentTime;
+            CurrentTime = timeAfterSleep;
+
+            if (timeToSpare < 1000)
+            {
+                // Edge case for if we are running far behind (ie. the thread got suspended)
+                nextFrameTime = CurrentTime + 1000 / MaximumUpdateHz;
+            }
+            else
+                nextFrameTime += 1000 / MaximumUpdateHz;
+        }
+
+        private void alignTo(double targetMilliseconds)
+        {
+            double remaining() => targetMilliseconds - SourceTime;
+
+            while (remaining() > 8) Thread.Sleep(TimeSpan.FromMilliseconds(4));
+            while (remaining() > 4) Thread.Yield();
+            while (remaining() > 1) Thread.Sleep(0);
+            while (remaining() > 0) Thread.SpinWait(32);
         }
     }
 }
