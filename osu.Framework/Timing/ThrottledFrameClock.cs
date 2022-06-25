@@ -78,9 +78,8 @@ namespace osu.Framework.Timing
             double remaining() => targetMilliseconds - SourceTime;
 
             while (remaining() > 8) Thread.Sleep(4);
-            while (remaining() > 4) Thread.Yield();
-            while (remaining() > 1) Thread.Sleep(0);
-            while (remaining() > 0) Thread.SpinWait(32);
+            while (remaining() > 1) Thread.Sleep(1);
+            while (remaining() > 0) Thread.Sleep(0);
         }
     }
 }
