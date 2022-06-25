@@ -39,7 +39,7 @@ namespace osu.Framework.Timing
 
             base.ProcessFrame();
 
-            if (Throttling)
+            if (Source.IsRunning && Throttling)
                 throttle();
             else
                 TimeSlept = 0;
