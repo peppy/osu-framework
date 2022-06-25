@@ -2,7 +2,6 @@
 
 // See the LICENCE file in the repository root for full licence text.
 
-using System;
 using System.Diagnostics;
 using System.Threading;
 
@@ -50,6 +49,7 @@ namespace osu.Framework.Timing
         private void throttle()
         {
             double timeToSpare = nextFrameTime - CurrentTime;
+            double timeBetweenFrames = 1000 / MaximumUpdateHz;
 
             if (timeToSpare > 0)
                 alignTo(nextFrameTime);
@@ -64,20 +64,20 @@ namespace osu.Framework.Timing
             TimeSlept = timeAfterSleep - CurrentTime;
             CurrentTime = timeAfterSleep;
 
-            if (timeToSpare < 1000)
+            if (timeToSpare < -1000)
             {
                 // Edge case for if we are running far behind (ie. the thread got suspended)
-                nextFrameTime = CurrentTime + 1000 / MaximumUpdateHz;
+                nextFrameTime = CurrentTime + timeBetweenFrames;
             }
             else
-                nextFrameTime += 1000 / MaximumUpdateHz;
+                nextFrameTime += timeBetweenFrames;
         }
 
         private void alignTo(double targetMilliseconds)
         {
             double remaining() => targetMilliseconds - SourceTime;
 
-            while (remaining() > 8) Thread.Sleep(TimeSpan.FromMilliseconds(4));
+            while (remaining() > 8) Thread.Sleep(4);
             while (remaining() > 4) Thread.Yield();
             while (remaining() > 1) Thread.Sleep(0);
             while (remaining() > 0) Thread.SpinWait(32);
