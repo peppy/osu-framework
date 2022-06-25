@@ -71,11 +71,17 @@ namespace osu.Framework.Timing
             accumulatedSleepError = Math.Max(-1000 / 30.0, accumulatedSleepError);
         }
 
-        private double sleepAndUpdateCurrent(int milliseconds)
+        private double sleepAndUpdateCurrent(double milliseconds)
         {
             double before = CurrentTime;
 
-            Thread.Sleep(milliseconds);
+            if (milliseconds > 1)
+                Thread.Sleep(new TimeSpan((int)(TimeSpan.TicksPerMillisecond * milliseconds)));
+            else
+            {
+                while (SourceTime - before < milliseconds)
+                    new SpinWait().SpinOnce();
+            }
 
             return (CurrentTime = SourceTime) - before;
         }
