@@ -70,28 +70,18 @@ namespace osu.Framework.Bindables
     /// An interface which can be bound to other <see cref="IBindable{T}"/>s in order to watch for (and react to) <see cref="ICanBeDisabled.Disabled">Disabled</see> and <see cref="IBindable{T}.Value">Value</see> changes.
     /// </summary>
     /// <typeparam name="T">The type of value encapsulated by this <see cref="IBindable{T}"/>.</typeparam>
-    public interface IBindable<T> : ICanBeDisabled, IHasDefaultValue, IUnbindable, IHasDescription
+    public interface IBindable<T> : IBindableData<T>, ICanBeDisabled, IUnbindable
     {
         /// <summary>
-        /// An event which is raised when <see cref="Value"/> has changed.
+        /// An event which is raised when <see cref="IBindableData{T}.Value"/> has changed.
         /// </summary>
         event Action<ValueChangedEvent<T>> ValueChanged;
-
-        /// <summary>
-        /// The current value of this bindable.
-        /// </summary>
-        T Value { get; }
-
-        /// <summary>
-        /// The default value of this bindable. Used when querying <see cref="IHasDefaultValue.IsDefault">IsDefault</see>.
-        /// </summary>
-        T Default { get; }
 
         /// <summary>
         /// Binds ourselves to another bindable such that we receive any values and value limitations of the bindable we bind width.
         /// </summary>
         /// <param name="them">The foreign bindable. This should always be the most permanent end of the bind (ie. a ConfigManager)</param>
-        void BindTo(IBindable<T> them);
+        void BindTo(IBindableData<T> them);
 
         /// <summary>
         /// An alias of <see cref="BindTo"/> provided for use in object initializer scenarios.
@@ -105,11 +95,8 @@ namespace osu.Framework.Bindables
         /// <summary>
         /// Bind an action to <see cref="ValueChanged"/> with the option of running the bound action once immediately.
         /// </summary>
-        /// <param name="onChange">The action to perform when <see cref="Value"/> changes.</param>
+        /// <param name="onChange">The action to perform when <see cref="IBindableData{T}.Value"/> changes.</param>
         /// <param name="runOnceImmediately">Whether the action provided in <paramref name="onChange"/> should be run once immediately.</param>
         void BindValueChanged(Action<ValueChangedEvent<T>> onChange, bool runOnceImmediately = false);
-
-        /// <inheritdoc cref="IBindable.GetBoundCopy"/>
-        IBindable<T> GetBoundCopy();
     }
 }

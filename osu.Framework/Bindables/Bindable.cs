@@ -162,7 +162,7 @@ namespace osu.Framework.Bindables
             BindTo(tThem);
         }
 
-        void IBindable<T>.BindTo(IBindable<T> them)
+        void IBindable<T>.BindTo(IBindableData<T> them)
         {
             if (!(them is Bindable<T> tThem))
                 throw new InvalidCastException($"Can't bind to a bindable of type {them.GetType()} from a bindable of type {GetType()}.");
@@ -398,7 +398,7 @@ namespace osu.Framework.Bindables
 
         IBindable IBindable.GetBoundCopy() => GetBoundCopy();
 
-        IBindable<T> IBindable<T>.GetBoundCopy() => GetBoundCopy();
+        IBindable<T> IBindableData<T>.GetBoundCopy() => GetBoundCopy();
 
         /// <inheritdoc cref="IBindable{T}.GetBoundCopy"/>
         public Bindable<T> GetBoundCopy() => IBindable.GetBoundCopyImplementation(this);
