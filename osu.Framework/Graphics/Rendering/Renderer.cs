@@ -392,85 +392,38 @@ namespace osu.Framework.Graphics.Rendering
 
         public void PushScissor(RectangleI scissor)
         {
-            scissorRectStack.Push(scissor);
-            setScissor(scissor);
         }
 
         public void PushScissorState(bool enabled)
         {
-            scissorStateStack.Push(enabled);
-            setScissorState(enabled);
         }
 
         public void PushScissorOffset(Vector2I offset)
         {
-            scissorOffsetStack.Push(offset);
-            setScissorOffset(offset);
         }
 
         public void PopScissor()
         {
-            Trace.Assert(scissorRectStack.Count > 1);
-
-            scissorRectStack.Pop();
-            setScissor(scissorRectStack.Peek());
         }
 
         public void PopScissorState()
         {
-            Trace.Assert(scissorStateStack.Count > 1);
-
-            scissorStateStack.Pop();
-            setScissorState(scissorStateStack.Peek());
         }
 
         public void PopScissorOffset()
         {
-            Trace.Assert(scissorOffsetStack.Count > 1);
-
-            scissorOffsetStack.Pop();
-            setScissorOffset(scissorOffsetStack.Peek());
         }
 
         private void setScissor(RectangleI scissor)
         {
-            if (scissor.Width < 0)
-            {
-                scissor.X += scissor.Width;
-                scissor.Width = -scissor.Width;
-            }
-
-            if (scissor.Height < 0)
-            {
-                scissor.Y += scissor.Height;
-                scissor.Height = -scissor.Height;
-            }
-
-            if (Scissor == scissor)
-                return;
-
-            FlushCurrentBatch();
-            SetScissorImplementation(scissor);
-            Scissor = scissor;
         }
 
         private void setScissorState(bool enabled)
         {
-            if (enabled == ScissorState)
-                return;
-
-            FlushCurrentBatch();
-            SetScissorStateImplementation(enabled);
-            ScissorState = enabled;
         }
 
         private void setScissorOffset(Vector2I offset)
         {
-            if (ScissorOffset == offset)
-                return;
-
-            FlushCurrentBatch();
-            ScissorOffset = offset;
         }
 
         /// <summary>
@@ -585,26 +538,6 @@ namespace osu.Framework.Graphics.Rendering
             GlobalPropertyManager.Set(GlobalProperty.DiscardInner, maskingInfo.Hollow);
             if (maskingInfo.Hollow)
                 GlobalPropertyManager.Set(GlobalProperty.InnerCornerRadius, maskingInfo.HollowCornerRadius);
-
-            if (isPushing)
-            {
-                // When drawing to a viewport that doesn't match the projection size (e.g. via framebuffers), the resultant image will be scaled
-                Vector2 projectionScale = new Vector2(ProjectionMatrix.Row0.X / 2, -ProjectionMatrix.Row1.Y / 2);
-                Vector2 viewportScale = Vector2.Multiply(Viewport.Size, projectionScale);
-
-                Vector2 location = (maskingInfo.ScreenSpaceAABB.Location - ScissorOffset) * viewportScale;
-                Vector2 size = maskingInfo.ScreenSpaceAABB.Size * viewportScale;
-
-                RectangleI actualRect = new RectangleI(
-                    (int)Math.Floor(location.X),
-                    (int)Math.Floor(location.Y),
-                    (int)Math.Ceiling(size.X),
-                    (int)Math.Ceiling(size.Y));
-
-                PushScissor(overwritePreviousScissor ? actualRect : RectangleI.Intersect(scissorRectStack.Peek(), actualRect));
-            }
-            else
-                PopScissor();
 
             currentMaskingInfo = maskingInfo;
         }
