@@ -7,8 +7,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using ManagedBass;
+using ManagedBass.Wasapi;
 using osu.Framework.Audio;
 using osu.Framework.Development;
+using osu.Framework.Logging;
 using osu.Framework.Platform.Linux.Native;
 
 namespace osu.Framework.Threading
@@ -113,6 +115,30 @@ namespace osu.Framework.Threading
         {
             Debug.Assert(ThreadSafety.IsAudioThread);
             Trace.Assert(deviceId != -1); // The real device ID should always be used, as the -1 device has special cases which are hard to work with.
+
+            if (RuntimeInfo.OS == RuntimeInfo.Platform.Windows)
+            {
+                Logger.Log($"Attempting WASAPI exclusive initialisation for device {deviceId}...");
+
+                // http://www.un4seen.com/doc/#basswasapi/BASS_WASAPI_Init.html
+                if (BassWasapi.Init(deviceId, Flags: WasapiInitFlags.Exclusive))
+                {
+                    Logger.Log("Success!");
+                    return true;
+                }
+
+                Logger.Log($"Failed ({Bass.LastError})!");
+
+                Logger.Log($"Attempting WASAPI raw initialisation for device {deviceId}...");
+
+                if (BassWasapi.Init(deviceId, Flags: WasapiInitFlags.Raw))
+                {
+                    Logger.Log("Success!");
+                    return true;
+                }
+
+                Logger.Log($"Failed ({Bass.LastError})!");
+            }
 
             // Try to initialise the device, or request a re-initialise.
             if (Bass.Init(deviceId, Flags: (DeviceInitFlags)128)) // 128 == BASS_DEVICE_REINIT
