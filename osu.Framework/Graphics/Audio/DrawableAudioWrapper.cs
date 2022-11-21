@@ -48,17 +48,12 @@ namespace osu.Framework.Graphics.Audio
 
         private readonly bool disposeUnderlyingComponentOnDispose;
 
-        private readonly AudioAdjustments adjustments = new AudioAdjustments();
+        private readonly AudioAdjustments adjustments;
 
         private IAggregateAudioAdjustment parentAdjustment;
         private IAudioMixer parentMixer;
 
         private readonly LayoutValue fromParentLayout = new LayoutValue(Invalidation.Parent);
-
-        private DrawableAudioWrapper()
-        {
-            AddLayout(fromParentLayout);
-        }
 
         /// <summary>
         /// Creates a <see cref="DrawableAudioWrapper"/> that will contain a drawable child.
@@ -68,6 +63,7 @@ namespace osu.Framework.Graphics.Audio
         protected DrawableAudioWrapper(Drawable content)
             : this()
         {
+            adjustments = new AudioAdjustments();
             AddInternal(content);
         }
 
@@ -82,7 +78,22 @@ namespace osu.Framework.Graphics.Audio
             this.component = component ?? throw new ArgumentNullException(nameof(component));
             this.disposeUnderlyingComponentOnDispose = disposeUnderlyingComponentOnDispose;
 
-            component.BindAdjustments(adjustments);
+            if (component is AdjustableAudioComponent adjustable)
+            {
+                // The standard case is where we are wrapping a component which also has its own adjustments.
+                // Rather than create a new set of adjustments, let's transfer them over.
+                adjustments = adjustable.Adjustments;
+            }
+            else
+            {
+                adjustments = new AudioAdjustments();
+                component.BindAdjustments(adjustments);
+            }
+        }
+
+        private DrawableAudioWrapper()
+        {
+            AddLayout(fromParentLayout);
         }
 
         protected override void Update()

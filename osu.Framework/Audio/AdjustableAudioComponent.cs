@@ -12,27 +12,27 @@ namespace osu.Framework.Audio
     /// </summary>
     public class AdjustableAudioComponent : AudioComponent, IAdjustableAudioComponent
     {
-        private readonly AudioAdjustments adjustments = new AudioAdjustments();
+        internal readonly AudioAdjustments Adjustments = new AudioAdjustments();
 
         /// <summary>
         /// The volume of this component.
         /// </summary>
-        public BindableNumber<double> Volume => adjustments.Volume;
+        public BindableNumber<double> Volume => Adjustments.Volume;
 
         /// <summary>
         /// The playback balance of this sample (-1 .. 1 where 0 is centered)
         /// </summary>
-        public BindableNumber<double> Balance => adjustments.Balance;
+        public BindableNumber<double> Balance => Adjustments.Balance;
 
         /// <summary>
         /// Rate at which the component is played back (affects pitch). 1 is 100% playback speed, or default frequency.
         /// </summary>
-        public BindableNumber<double> Frequency => adjustments.Frequency;
+        public BindableNumber<double> Frequency => Adjustments.Frequency;
 
         /// <summary>
         /// Rate at which the component is played back (does not affect pitch). 1 is 100% playback speed.
         /// </summary>
-        public BindableNumber<double> Tempo => adjustments.Tempo;
+        public BindableNumber<double> Tempo => Adjustments.Tempo;
 
         protected AdjustableAudioComponent()
         {
@@ -43,12 +43,12 @@ namespace osu.Framework.Audio
         }
 
         public void AddAdjustment(AdjustableProperty type, IBindable<double> adjustBindable) =>
-            adjustments.AddAdjustment(type, adjustBindable);
+            Adjustments.AddAdjustment(type, adjustBindable);
 
         public void RemoveAdjustment(AdjustableProperty type, IBindable<double> adjustBindable) =>
-            adjustments.RemoveAdjustment(type, adjustBindable);
+            Adjustments.RemoveAdjustment(type, adjustBindable);
 
-        public void RemoveAllAdjustments(AdjustableProperty type) => adjustments.RemoveAllAdjustments(type);
+        public void RemoveAllAdjustments(AdjustableProperty type) => Adjustments.RemoveAllAdjustments(type);
 
         private bool invalidationPending;
 
@@ -75,17 +75,17 @@ namespace osu.Framework.Audio
             }
         }
 
-        public void BindAdjustments(IAggregateAudioAdjustment component) => adjustments.BindAdjustments(component);
+        public void BindAdjustments(IAggregateAudioAdjustment component) => Adjustments.BindAdjustments(component);
 
-        public void UnbindAdjustments(IAggregateAudioAdjustment component) => adjustments.UnbindAdjustments(component);
+        public void UnbindAdjustments(IAggregateAudioAdjustment component) => Adjustments.UnbindAdjustments(component);
 
-        public IBindable<double> AggregateVolume => adjustments.AggregateVolume;
+        public IBindable<double> AggregateVolume => Adjustments.AggregateVolume;
 
-        public IBindable<double> AggregateBalance => adjustments.AggregateBalance;
+        public IBindable<double> AggregateBalance => Adjustments.AggregateBalance;
 
-        public IBindable<double> AggregateFrequency => adjustments.AggregateFrequency;
+        public IBindable<double> AggregateFrequency => Adjustments.AggregateFrequency;
 
-        public IBindable<double> AggregateTempo => adjustments.AggregateTempo;
+        public IBindable<double> AggregateTempo => Adjustments.AggregateTempo;
 
         protected override void Dispose(bool disposing)
         {
