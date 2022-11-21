@@ -65,8 +65,18 @@ namespace osu.Framework.Audio
         {
             foreach (AdjustableProperty type in all_adjustments)
             {
-                var aggregate = getAggregate(type) = new AggregateBindable<double>(getAggregateFunction(type), getProperty(type).GetUnboundCopy());
-                aggregate.AddSource(getProperty(type));
+                var source = getProperty(type);
+
+                var aggregate = getAggregate(type) = new AggregateBindable<double>(getAggregateFunction(type), new BindableNumber<double>
+                {
+                    Value = source.Value,
+                    Default = source.Default,
+                    MinValue = source.MinValue,
+                    MaxValue = source.MaxValue,
+                    Precision = source.Precision
+                });
+
+                aggregate.AddSource(source);
             }
         }
 
