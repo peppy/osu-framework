@@ -10,7 +10,7 @@ environment:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
     - job_name: framework-xamarin
       job_group: framework-base
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
     - job_name: templates
       job_depends_on: framework-base
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
@@ -29,7 +29,16 @@ for:
     matrix:
       only:
         - job_name: framework-xamarin
+    install:
+        # Download the Android SDK tools
+        - appveyor DownloadFile https://dl.google.com/android/repository/commandlinetools-win-9123335_latest.zip -FileName android-tools.zip
+        - 7z x android-tools.zip -oc:\android-tools
+
+        # Install Android 31 platform
+        - c:\android-tools\cmdline-tools\bin\sdkmanager.bat --install platforms;android-31 --sdk_root="C:\Program Files (x86)\Android\android-sdk"
     build_script:
+      - cmd: dotnet workload install android
+      - cmd: dotnet restore
       - cmd: PowerShell -Version 2.0 .\build.ps1 -Target DeployFrameworkXamarin
   -
     matrix:
