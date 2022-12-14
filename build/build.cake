@@ -144,17 +144,22 @@ Task("PackFramework")
 
 Task("PackiOSFramework")
     .Does(() => {
-        DotNetCorePack(iosFrameworkProject.FullPath, new DotNetCorePackSettings {
-            OutputDirectory = artifactsDirectory,
-            Configuration = configuration,
-            Verbosity = DotNetCoreVerbosity.Quiet,
+        MSBuild(iosFrameworkProject, new MSBuildSettings {
+            Restore = true,
+            BinaryLogger = new MSBuildBinaryLogSettings{
+                Enabled = true,
+                FileName = tempDirectory.CombineWithFilePath("msbuildlog.binlog").FullPath
+            },
+            Verbosity = Verbosity.Minimal,
             ArgumentCustomization = args =>
             {
+                args.Append($"/p:Configuration={configuration}");
                 args.Append($"/p:Version={version}");
-                args.Append($"/p:GenerateDocumentationFile=true");
+                args.Append($"/p:PackageOutputPath={artifactsDirectory.MakeAbsolute(Context.Environment)}");
+
                 return args;
             }
-        });
+        }.WithTarget("Pack"));
     });
 
 Task("PackAndroidFramework")
