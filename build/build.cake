@@ -145,11 +145,6 @@ Task("PackFramework")
 Task("PackiOSFramework")
     .Does(() => {
         MSBuild(iosFrameworkProject, new MSBuildSettings {
-            Restore = true,
-            BinaryLogger = new MSBuildBinaryLogSettings{
-                Enabled = true,
-                FileName = tempDirectory.CombineWithFilePath("msbuildlog.binlog").FullPath
-            },
             Verbosity = Verbosity.Minimal,
             ArgumentCustomization = args =>
             {
