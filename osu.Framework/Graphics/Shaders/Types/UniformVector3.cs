@@ -1,6 +1,7 @@
 // Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System;
 using System.Runtime.InteropServices;
 using osuTK;
 
@@ -10,7 +11,7 @@ namespace osu.Framework.Graphics.Shaders.Types
     /// Must be aligned to a 16-byte boundary. Is equivalent to a <see cref="UniformVector4"/>.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1, Size = 16)]
-    public record struct UniformVector3
+    public struct UniformVector3 : IEquatable<UniformVector3>
     {
         public UniformVector4 Value;
 
@@ -30,5 +31,20 @@ namespace osu.Framework.Graphics.Shaders.Types
                 Z = value.Z
             }
         };
+
+        public bool Equals(UniformVector3 other)
+        {
+            return Value.Equals(other.Value);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is UniformVector3 other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return Value.GetHashCode();
+        }
     }
 }
