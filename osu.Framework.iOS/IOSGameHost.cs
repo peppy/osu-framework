@@ -46,9 +46,6 @@ namespace osu.Framework.iOS
 
             base.SetupConfig(defaultOverrides);
 
-            // this is required to get the correct sizing information on iOS.
-            Config.SetValue(FrameworkSetting.WindowMode, WindowMode.Fullscreen);
-
             DebugConfig.SetValue(DebugSetting.BypassFrontToBackPass, true);
         }
 
