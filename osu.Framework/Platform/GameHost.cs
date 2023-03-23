@@ -825,12 +825,6 @@ namespace osu.Framework.Platform
                     yield return RendererType.Direct3D11;
 
                     break;
-
-                case RuntimeInfo.Platform.macOS:
-                case RuntimeInfo.Platform.iOS:
-                    yield return RendererType.Metal;
-
-                    break;
             }
 
             // Non-veldrid "known-to-work".
@@ -1151,6 +1145,21 @@ namespace osu.Framework.Platform
 
             Dependencies.Cache(DebugConfig = new FrameworkDebugConfigManager());
             Dependencies.Cache(Config = new FrameworkConfigManager(Storage, defaultOverrides));
+
+            Config.SetValue(FrameworkSetting.SizeFullscreen, new Size(512, 512));
+            Config.SetValue(FrameworkSetting.WindowedSize, new Size(512, 512));
+            Config.SetValue(FrameworkSetting.WindowMode, WindowMode.Borderless);
+
+            UpdateThread.Scheduler.AddDelayed(() =>
+            {
+                Config.SetValue(FrameworkSetting.SizeFullscreen, new Size(512, 512));
+                Config.SetValue(FrameworkSetting.WindowedSize, new Size(512, 512));
+
+                UpdateThread.Scheduler.AddDelayed(() =>
+                {
+                    windowMode.Value = WindowMode.Windowed;
+                }, 10000);
+            }, 10000);
 
             windowMode = Config.GetBindable<WindowMode>(FrameworkSetting.WindowMode);
             windowMode.BindValueChanged(mode =>
