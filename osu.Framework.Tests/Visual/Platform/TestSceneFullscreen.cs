@@ -114,15 +114,11 @@ namespace osu.Framework.Tests.Visual.Platform
             var initialWindowMode = windowMode.Value;
 
             // if we support windowed mode, switch to it and test resizing the window
-            if (window.SupportedWindowModes.Contains(WindowMode.Windowed))
-            {
-                AddStep("change to windowed", () => windowMode.Value = WindowMode.Windowed);
-                AddStep("change window size", () => config.SetValue(FrameworkSetting.WindowedSize, new Size(640, 640)));
-            }
+            AddStep("change to windowed", () => windowMode.Value = WindowMode.Windowed);
+            AddStep("change window size", () => config.SetValue(FrameworkSetting.WindowedSize, new Size(640, 640)));
 
             // if we support borderless, test that it can be used
-            if (window.SupportedWindowModes.Contains(WindowMode.Borderless))
-                AddStep("change to borderless", () => windowMode.Value = WindowMode.Borderless);
+            AddStep("change to borderless", () => windowMode.Value = WindowMode.Borderless);
 
             // if we support fullscreen mode, switch to it and test swapping resolutions
             if (window.SupportedWindowModes.Contains(WindowMode.Fullscreen))
