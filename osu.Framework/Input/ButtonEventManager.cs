@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using JetBrains.Annotations;
 using osu.Framework.Graphics;
@@ -31,6 +32,11 @@ namespace osu.Framework.Input
         /// </summary>
         [CanBeNull]
         protected List<Drawable> ButtonDownInputQueue { get; private set; }
+
+        /// <summary>
+        /// The drawable from the input queue that handled a button press.
+        /// </summary>
+        public Drawable ButtonDownDrawable { get; private set; }
 
         /// <summary>
         /// The input queue.
@@ -68,6 +74,8 @@ namespace osu.Framework.Input
         /// <returns>Whether the event was handled.</returns>
         private bool handleButtonDown(InputState state)
         {
+            Debug.Assert(ButtonDownDrawable == null);
+
             List<Drawable> inputQueue = InputQueue.ToList();
             Drawable handledBy = HandleButtonDown(state, inputQueue);
 
@@ -79,6 +87,7 @@ namespace osu.Framework.Input
             }
 
             ButtonDownInputQueue = inputQueue;
+            ButtonDownDrawable = handledBy;
 
             return handledBy != null;
         }
@@ -99,6 +108,7 @@ namespace osu.Framework.Input
         {
             HandleButtonUp(state, ButtonDownInputQueue);
             ButtonDownInputQueue = null;
+            ButtonDownDrawable = null;
         }
 
         /// <summary>
