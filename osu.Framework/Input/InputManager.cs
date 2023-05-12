@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Linq;
 using JetBrains.Annotations;
 using osu.Framework.Allocation;
 using osu.Framework.Extensions.ListExtensions;
@@ -787,6 +788,14 @@ namespace osu.Framework.Input
         private void updateTouchMouseRight(TouchStateChangeEvent e)
         {
             if (!AllowRightClickFromLongTouch)
+                return;
+
+            // Very simply, if a touch has been mapped to a mouse button and handled as a mouse down event, we shouldn't try
+            // and do any hold logic.
+            //
+            // When a drawable handles mouse down, it's given a clear intention that a hold operation is occurring. This would never
+            // need to be followed with a right click.
+            if (mouseButtonEventManagers.Any(m => m.Value.ButtonDownDrawable != null))
                 return;
 
             // if a touch was pressed/released in this event, reset gesture validity state.
