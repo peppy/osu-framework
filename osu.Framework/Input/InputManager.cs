@@ -144,11 +144,6 @@ namespace osu.Framework.Input
         private readonly Dictionary<JoystickAxisSource, JoystickAxisEventManager> joystickAxisEventManagers = new Dictionary<JoystickAxisSource, JoystickAxisEventManager>();
 
         /// <summary>
-        /// Whether to produce mouse input on any touch input from latest source.
-        /// </summary>
-        protected virtual bool MapMouseToLatestTouch => true;
-
-        /// <summary>
         /// Whether long touches should produce right mouse click, if mouse is mapped to touch.
         /// </summary>
         protected virtual bool AllowRightClickFromLongTouch => true;
@@ -759,9 +754,6 @@ namespace osu.Framework.Input
         /// <returns>Whether mouse input has been performed accordingly.</returns>
         protected virtual bool HandleMouseTouchStateChange(TouchStateChangeEvent e)
         {
-            if (!MapMouseToLatestTouch)
-                return false;
-
             if (e.IsActive == true || e.LastPosition != null)
             {
                 new MousePositionAbsoluteInputFromTouch(e)
