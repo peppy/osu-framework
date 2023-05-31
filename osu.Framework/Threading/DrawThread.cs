@@ -14,10 +14,33 @@ namespace osu.Framework.Threading
     {
         private readonly GameHost host;
 
+        private readonly bool drawThreadIsDelegated;
+
         public DrawThread(Action onNewFrame, GameHost host)
             : base(onNewFrame, "Draw")
         {
             this.host = host;
+
+            if (host.Renderer.TrySetDrawFrameDelegate(base.RunSingleFrame))
+                drawThreadIsDelegated = true;
+        }
+
+        protected override void PrepareForWork()
+        {
+            if (drawThreadIsDelegated)
+            {
+                // Intentionally inhibiting the base implementation which spawns a native thread.
+                // Therefore, we need to run Initialize inline.
+                Initialize(true);
+            }
+        }
+
+        internal override void RunSingleFrame()
+        {
+            if (drawThreadIsDelegated)
+                return;
+
+            base.RunSingleFrame();
         }
 
         public override bool IsCurrent => ThreadSafety.IsDrawThread;

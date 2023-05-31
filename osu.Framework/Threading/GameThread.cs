@@ -288,7 +288,7 @@ namespace osu.Framework.Threading
         /// <summary>
         /// Runs a single frame, updating the execution state if required.
         /// </summary>
-        internal void RunSingleFrame()
+        internal virtual void RunSingleFrame()
         {
             var newState = processFrame();
 
