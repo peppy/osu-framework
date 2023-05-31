@@ -2,6 +2,7 @@
   "solution": {
     "path": "osu-framework.sln",
     "projects": [
+      "..\\veldrid\\src\\Veldrid\\Veldrid.csproj",
       "osu.Framework.Benchmarks\\osu.Framework.Benchmarks.csproj",
       "osu.Framework.NativeLibs\\osu.Framework.NativeLibs.csproj",
       "osu.Framework.SourceGeneration.Tests\\osu.Framework.SourceGeneration.Tests.csproj",
