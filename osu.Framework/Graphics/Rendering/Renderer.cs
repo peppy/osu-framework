@@ -346,6 +346,8 @@ namespace osu.Framework.Graphics.Rendering
 
         protected internal abstract bool WaitUntilNextFrameReady();
 
+        public abstract bool TrySetDrawFrameDelegate(Action drawFrame);
+
         /// <summary>
         /// Invoked when the rendering thread is active and commands will be enqueued.
         /// This is mainly required for OpenGL renderers to mark context as current before performing GL calls.

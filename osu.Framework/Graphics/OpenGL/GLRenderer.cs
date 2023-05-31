@@ -123,6 +123,8 @@ namespace osu.Framework.Graphics.OpenGL
             return true;
         }
 
+        public override bool TrySetDrawFrameDelegate(Action drawFrame) => false;
+
         protected internal override void MakeCurrent() => openGLSurface.MakeCurrent(openGLSurface.WindowContext);
         protected internal override void ClearCurrent() => openGLSurface.ClearCurrent();
         protected internal override void SwapBuffers() => openGLSurface.SwapBuffers();

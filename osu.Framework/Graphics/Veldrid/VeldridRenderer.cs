@@ -25,6 +25,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using Veldrid;
+using Veldrid.MTL;
 using Veldrid.OpenGL;
 using Veldrid.OpenGLBinding;
 using Image = SixLabors.ImageSharp.Image;
@@ -235,6 +236,17 @@ namespace osu.Framework.Graphics.Veldrid
         protected internal override void SwapBuffers() => Device.SwapBuffers();
         protected internal override void WaitUntilIdle() => Device.WaitForIdle();
         protected internal override bool WaitUntilNextFrameReady() => Device.WaitForNextFrameReady();
+
+        public override bool TrySetDrawFrameDelegate(Action drawFrame)
+        {
+            if (Device is ISupportsDrawCallback dcDevice)
+            {
+                dcDevice.DrawFrameCallback = drawFrame;
+                return true;
+            }
+
+            return false;
+        }
 
         protected internal override void MakeCurrent()
         {

@@ -182,6 +182,8 @@ namespace osu.Framework.Graphics.Rendering.Dummy
 
         public void ScheduleDisposal<T>(Action<T> disposalAction, T target) => disposalAction(target);
 
+        public bool TrySetDrawFrameDelegate(Action drawFrame) => false;
+
         Image<Rgba32> IRenderer.TakeScreenshot() => new Image<Rgba32>(1366, 768);
 
         IShaderPart IRenderer.CreateShaderPart(IShaderStore manager, string name, byte[]? rawData, ShaderPartType partType)

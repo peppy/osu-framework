@@ -188,6 +188,13 @@ namespace osu.Framework.Graphics.Rendering
         protected internal bool WaitUntilNextFrameReady();
 
         /// <summary>
+        /// Attempt to set a delegate which allows the GPU to control the timing of draw operations.
+        /// </summary>
+        /// <param name="drawFrame">The delegate to invoke to draw a frame.</param>
+        /// <returns><c>true</c> if supported, else <c>false</c>.</returns>
+        protected internal bool TrySetDrawFrameDelegate(Action drawFrame);
+
+        /// <summary>
         /// Invoked when the rendering thread is active and commands will be enqueued.
         /// This is mainly required for OpenGL renderers to mark context as current before performing GL calls.
         /// </summary>
