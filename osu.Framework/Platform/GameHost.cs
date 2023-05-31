@@ -783,13 +783,13 @@ namespace osu.Framework.Platform
             }
             finally
             {
-                if (CanExit)
-                {
-                    // Close the window and stop all threads
-                    performExit(true);
-
-                    host_running_mutex.Release();
-                }
+                // if (CanExit)
+                // {
+                //     // Close the window and stop all threads
+                //     performExit(true);
+                //
+                //     host_running_mutex.Release();
+                // }
             }
         }
 

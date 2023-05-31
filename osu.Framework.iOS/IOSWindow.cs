@@ -1,8 +1,10 @@
 // Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Threading;
 using ObjCRuntime;
 using osu.Framework.Graphics;
 using osu.Framework.Platform;
@@ -46,6 +48,21 @@ namespace osu.Framework.iOS
 
             window = Runtime.GetNSObject<UIWindow>(WindowHandle);
             updateSafeArea();
+        }
+
+        protected override void RunMainLoop()
+        {
+            // Have to run once to get things in a good state, probably window specifics or something.
+            RunFrame();
+
+            SDL.SDL_iPhoneSetEventPump(SDL.SDL_bool.SDL_FALSE);
+            SDL.SDL_iPhoneSetAnimationCallback(SDLWindowHandle, 1, _ => RunFrame(), IntPtr.Zero);
+
+            // Run method has to be kept active else the game will think it quit.
+            // From iOS' perspective, this is likely not required, but removing it will mean
+            // changing how `GameHost.Run` handles the shutdown sequence.
+            // while (Exists)
+            //     Thread.Sleep(50);
         }
 
         private void updateSafeArea()

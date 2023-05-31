@@ -4,6 +4,7 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 using JetBrains.Annotations;
 using osu.Framework.Allocation;
 using osu.Framework.Bindables;
@@ -252,31 +253,37 @@ namespace osu.Framework.Platform
         {
             SDL.SDL_SetEventFilter(eventFilterDelegate = eventFilter, objectHandle.Handle);
 
+            RunMainLoop();
+        }
+
+        protected virtual void RunMainLoop()
+        {
             while (Exists)
+                RunFrame();
+        }
+
+        protected void RunFrame()
+        {
+            commandScheduler.Update();
+
+            if (!Exists)
             {
-                commandScheduler.Update();
-
-                if (!Exists)
-                    break;
-
-                if (pendingWindowState != null)
-                    updateAndFetchWindowSpecifics();
-
-                pollSDLEvents();
-
-                if (!cursorInWindow.Value)
-                    pollMouse();
-
-                EventScheduler.Update();
-
-                Update?.Invoke();
+                Exited?.Invoke();
+                Close();
+                SDL.SDL_Quit();
+                return;
             }
 
-            Exists = false;
-            Exited?.Invoke();
+            if (pendingWindowState != null)
+                updateAndFetchWindowSpecifics();
 
-            Close();
-            SDL.SDL_Quit();
+            pollSDLEvents();
+
+            if (!cursorInWindow.Value)
+                pollMouse();
+
+            EventScheduler.Update();
+            Update?.Invoke();
         }
 
         /// <summary>
