@@ -23,7 +23,7 @@ namespace osu.Framework.Platform
     /// </summary>
     public class ThreadRunner
     {
-        private readonly InputThread mainThread;
+        private readonly GameThread mainThread;
 
         private readonly List<GameThread> threads = new List<GameThread>();
 
@@ -65,7 +65,7 @@ namespace osu.Framework.Platform
         /// </summary>
         /// <param name="mainThread">The main window thread. Used for input in multi-threaded execution; all game logic in single-threaded execution.</param>
         /// <exception cref="NotImplementedException"></exception>
-        public ThreadRunner(InputThread mainThread)
+        public ThreadRunner(GameThread mainThread)
         {
             this.mainThread = mainThread;
             AddThread(mainThread);

@@ -1429,7 +1429,7 @@ namespace osu.Framework.Platform
         /// </summary>
         /// <param name="mainThread">The main thread.</param>
         /// <returns>The <see cref="ThreadRunner"/>.</returns>
-        protected virtual ThreadRunner CreateThreadRunner(InputThread mainThread) => new ThreadRunner(mainThread);
+        protected virtual ThreadRunner CreateThreadRunner(GameThread mainThread) => new ThreadRunner(mainThread);
     }
 
     /// <summary>
