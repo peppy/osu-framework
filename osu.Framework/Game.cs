@@ -261,7 +261,7 @@ namespace osu.Framework
             FrameStatistics.BindValueChanged(e => performanceOverlay.State = e.NewValue, true);
         }
 
-        protected readonly Bindable<FrameStatisticsMode> FrameStatistics = new Bindable<FrameStatisticsMode>();
+        protected readonly Bindable<FrameStatisticsMode> FrameStatistics = new Bindable<FrameStatisticsMode>(FrameStatisticsMode.Minimal);
 
         private GlobalStatisticsDisplay globalStatistics;
 
