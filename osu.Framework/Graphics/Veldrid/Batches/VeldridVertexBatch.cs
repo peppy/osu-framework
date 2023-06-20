@@ -13,13 +13,7 @@ namespace osu.Framework.Graphics.Veldrid.Batches
     internal abstract class VeldridVertexBatch<T> : IVertexBatch<T>
         where T : unmanaged, IEquatable<T>, IVertex
     {
-        private readonly List<VeldridVertexBuffer<T>>[] tripleBufferedVertexBuffers = new List<VeldridVertexBuffer<T>>[3];
-
-        public List<VeldridVertexBuffer<T>> CurrentVertexBuffers
-        {
-            get => tripleBufferedVertexBuffers[renderer.ResetId % 3];
-            set => tripleBufferedVertexBuffers[renderer.ResetId % 3] = value;
-        }
+        public List<VeldridVertexBuffer<T>> VertexBuffers = new List<VeldridVertexBuffer<T>>();
 
         /// <summary>
         /// The number of vertices in each VertexBuffer.
@@ -34,7 +28,7 @@ namespace osu.Framework.Graphics.Veldrid.Batches
 
         private readonly VeldridRenderer renderer;
 
-        private VeldridVertexBuffer<T> currentVertexBuffer => CurrentVertexBuffers[currentBufferIndex];
+        private VeldridVertexBuffer<T> currentVertexBuffer => VertexBuffers[currentBufferIndex];
 
         protected VeldridVertexBatch(VeldridRenderer renderer, int bufferSize)
         {
@@ -42,9 +36,6 @@ namespace osu.Framework.Graphics.Veldrid.Batches
             this.renderer = renderer;
 
             AddAction = Add;
-
-            for (int i = 0; i < tripleBufferedVertexBuffers.Length; i++)
-                tripleBufferedVertexBuffers[i] = new List<VeldridVertexBuffer<T>>();
         }
 
         #region Disposal
@@ -59,11 +50,8 @@ namespace osu.Framework.Graphics.Veldrid.Batches
         {
             if (disposing)
             {
-                for (int i = 0; i < tripleBufferedVertexBuffers.Length; i++)
-                {
-                    foreach (VeldridVertexBuffer<T> vbo in tripleBufferedVertexBuffers[i])
-                        vbo.Dispose();
-                }
+                foreach (VeldridVertexBuffer<T> vbo in VertexBuffers)
+                    vbo.Dispose();
             }
         }
 
@@ -86,15 +74,15 @@ namespace osu.Framework.Graphics.Veldrid.Batches
         {
             renderer.SetActiveBatch(this);
 
-            if (currentBufferIndex < CurrentVertexBuffers.Count && currentVertexIndex >= currentVertexBuffer.Size)
+            if (currentBufferIndex < VertexBuffers.Count && currentVertexIndex >= currentVertexBuffer.Size)
             {
                 Draw();
                 FrameStatistics.Increment(StatisticsCounterType.VBufOverflow);
             }
 
             // currentIndex will change after Draw() above, so this cannot be in an else-condition
-            while (currentBufferIndex >= CurrentVertexBuffers.Count)
-                CurrentVertexBuffers.Add(CreateVertexBuffer(renderer));
+            while (currentBufferIndex >= VertexBuffers.Count)
+                VertexBuffers.Add(CreateVertexBuffer(renderer));
 
             if (currentVertexBuffer.SetVertex(currentVertexIndex, v))
             {
