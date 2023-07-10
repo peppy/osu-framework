@@ -3,6 +3,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using osu.Framework.Graphics.Veldrid.Buffers.Staging;
 using osu.Framework.Platform;
 using Veldrid;
 
@@ -16,35 +17,25 @@ namespace osu.Framework.Graphics.Veldrid.Buffers
         private readonly NativeMemoryTracker.NativeMemoryLease memoryLease;
 
         private ResourceSet? set;
-        private TData data;
+
+        private readonly IStagingBuffer<TData> data;
 
         public VeldridUniformBufferStorage(VeldridRenderer renderer)
         {
             this.renderer = renderer;
 
-            buffer = renderer.Factory.CreateBuffer(new BufferDescription((uint)Marshal.SizeOf(default(TData)), BufferUsage.UniformBuffer));
+            data = renderer.CreateStagingBuffer<TData>(1);
+            buffer = renderer.Factory.CreateBuffer(new BufferDescription((uint)Marshal.SizeOf(default(TData)), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
             memoryLease = NativeMemoryTracker.AddMemory(this, buffer.SizeInBytes);
         }
 
         public TData Data
         {
-            get => data;
+            get => data.Data[0];
             set
             {
-                data = value;
-
-                // These pathways are faster on respective platforms.
-                // Test using TestSceneVertexUploadPerformance.
-                if (renderer.Device.BackendType == GraphicsBackend.Metal)
-                {
-                    var staging = renderer.GetFreeStagingBuffer(buffer.SizeInBytes);
-                    renderer.Device.UpdateBuffer(staging, 0, ref data);
-                    renderer.BufferUpdateCommands.CopyBuffer(staging, 0, buffer, 0, buffer.SizeInBytes);
-                }
-                else
-                {
-                    renderer.BufferUpdateCommands.UpdateBuffer(buffer, 0, data);
-                }
+                data.Data[0] = value;
+                data.CopyTo(buffer, 0, 0, 1);
             }
         }
 
