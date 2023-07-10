@@ -1,8 +1,6 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
-#nullable disable
-
 using System;
 using System.Threading;
 using osu.Framework.Allocation;
@@ -21,9 +19,11 @@ namespace osu.Framework.Graphics.Containers
     public partial class DelayedLoadWrapper : CompositeDrawable
     {
         [Resolved]
-        protected Game Game { get; private set; }
+        protected Game Game { get; private set; } = null!;
 
-        private readonly Func<Drawable> createFunc;
+        private readonly Func<Drawable>? createFunc;
+
+        private Drawable? content;
 
         /// <summary>
         /// Creates a <see cref="Container"/> that will asynchronously load the given <see cref="Drawable"/> with a delay.
@@ -58,9 +58,7 @@ namespace osu.Framework.Graphics.Containers
             AddLayout(isIntersectingCache);
         }
 
-        private Drawable content;
-
-        public Drawable Content
+        public Drawable? Content
         {
             get => content;
             protected set
@@ -90,8 +88,8 @@ namespace osu.Framework.Graphics.Containers
 
         protected virtual bool ShouldLoadContent => timeVisible > timeBeforeLoad;
 
-        private CancellationTokenSource cancellationTokenSource;
-        private ScheduledDelegate scheduledAddition;
+        private CancellationTokenSource? cancellationTokenSource;
+        private ScheduledDelegate? scheduledAddition;
 
         protected override void Update()
         {
@@ -114,7 +112,10 @@ namespace osu.Framework.Graphics.Containers
             if (DelayedLoadTriggered || DelayedLoadCompleted)
                 throw new InvalidOperationException("Load has already started!");
 
-            Content ??= createFunc();
+            Content ??= createFunc?.Invoke();
+
+            if (Content == null)
+                return;
 
             DelayedLoadTriggered = true;
             DelayedLoadStarted?.Invoke(Content);
@@ -165,12 +166,12 @@ namespace osu.Framework.Graphics.Containers
         /// <summary>
         /// Fired when delayed async load has started.
         /// </summary>
-        public event Action<Drawable> DelayedLoadStarted;
+        public event Action<Drawable>? DelayedLoadStarted;
 
         /// <summary>
         /// Fired when delayed async load completes. Should be used to perform transitions.
         /// </summary>
-        public event Action<Drawable> DelayedLoadComplete;
+        public event Action<Drawable>? DelayedLoadComplete;
 
         /// <summary>
         /// True if the load task for our content has been started.
@@ -185,11 +186,11 @@ namespace osu.Framework.Graphics.Containers
 
         private readonly LayoutValue optimisingContainerCache = new LayoutValue(Invalidation.Parent);
         private readonly LayoutValue isIntersectingCache = new LayoutValue(Invalidation.All);
-        private ScheduledDelegate isIntersectingResetDelegate;
+        private ScheduledDelegate? isIntersectingResetDelegate;
 
         protected bool IsIntersecting { get; private set; }
 
-        internal IOnScreenOptimisingContainer OptimisingContainer { get; private set; }
+        internal IOnScreenOptimisingContainer? OptimisingContainer { get; private set; }
 
         internal IOnScreenOptimisingContainer FindParentOptimisingContainer() => this.FindClosestParent<IOnScreenOptimisingContainer>();
 
@@ -204,7 +205,7 @@ namespace osu.Framework.Graphics.Containers
             // The scheduled delegate will be cancelled if this wrapper has its UpdateSubTreeMasking() invoked, as more accurate intersections can be computed there instead.
             if (isIntersectingResetDelegate == null)
             {
-                isIntersectingResetDelegate = Game?.Scheduler.AddDelayed(wrapper => wrapper.IsIntersecting = false, this, 0);
+                isIntersectingResetDelegate = Game.Scheduler.AddDelayed(wrapper => wrapper.IsIntersecting = false, this, 0);
                 result = true;
             }
 
