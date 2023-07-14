@@ -75,7 +75,7 @@ namespace osu.Framework.Graphics.Veldrid
                 var item = used[i];
 
                 // Usages are sequential so we can stop checking after the first non-completed usage.
-                if (item.FrameUsageIndex > Renderer.LatestCompletedFrameIndex)
+                if (item.FrameUsageIndex > Renderer.LatestCompletedFrameIndex - 2)
                     break;
 
                 available.Add(item);
