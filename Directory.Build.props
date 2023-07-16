@@ -37,4 +37,9 @@
     <PackageProjectUrl>https://github.com/ppy/osu-framework</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ppy/osu-framework</RepositoryUrl>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' != 'Release'">
+    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+    <RunAnalyzersDuringLiveAnalysis>false</RunAnalyzersDuringLiveAnalysis>
+    <RunAnalyzers>false</RunAnalyzers>
+  </PropertyGroup>
 </Project>
