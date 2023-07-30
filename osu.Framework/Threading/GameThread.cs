@@ -161,7 +161,7 @@ namespace osu.Framework.Threading
         /// </summary>
         private volatile bool exitRequested;
 
-        internal GameThread(Action? onNewFrame = null, string name = "unknown", bool monitorPerformance = true)
+        public GameThread(Action? onNewFrame = null, string name = "unknown", bool monitorPerformance = true)
         {
             OnNewFrame = onNewFrame;
 
