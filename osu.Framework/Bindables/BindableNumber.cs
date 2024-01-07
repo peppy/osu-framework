@@ -32,6 +32,8 @@ namespace osu.Framework.Bindables
 
         private T precision;
 
+        private bool usingDefaultPrecision = true;
+
         public T Precision
         {
             get => precision;
@@ -44,6 +46,7 @@ namespace osu.Framework.Bindables
                     throw new ArgumentOutOfRangeException(nameof(Precision), value, "Must be greater than 0.");
 
                 SetPrecision(value, true, this);
+                usingDefaultPrecision = Precision.CompareTo(DefaultPrecision) <= 0;
             }
         }
 
@@ -73,12 +76,18 @@ namespace osu.Framework.Bindables
 
         private void setValue(T value)
         {
-            if (Precision.CompareTo(DefaultPrecision) > 0)
+            if (!usingDefaultPrecision)
             {
                 double doubleValue = ClampValue(value, MinValue, MaxValue).ToDouble(NumberFormatInfo.InvariantInfo);
-                doubleValue = Math.Round(doubleValue / Precision.ToDouble(NumberFormatInfo.InvariantInfo)) * Precision.ToDouble(NumberFormatInfo.InvariantInfo);
+                double doublePrecision = Precision.ToDouble(NumberFormatInfo.InvariantInfo);
 
-                base.Value = (T)Convert.ChangeType(doubleValue, typeof(T), CultureInfo.InvariantCulture);
+                double rounded = Math.Round(doubleValue / doublePrecision) * doublePrecision;
+
+                // Avoid ChangeType overhead when we can.
+                if (rounded == doubleValue)
+                    base.Value = value;
+                else
+                    base.Value = (T)Convert.ChangeType(doubleValue, typeof(T), CultureInfo.InvariantCulture);
             }
             else
                 base.Value = value;
