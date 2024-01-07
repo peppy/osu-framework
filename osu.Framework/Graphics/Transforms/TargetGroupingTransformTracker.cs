@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using JetBrains.Annotations;
 using osu.Framework.Lists;
 
 namespace osu.Framework.Graphics.Transforms
@@ -57,16 +56,13 @@ namespace osu.Framework.Graphics.Transforms
             this.transformable = transformable;
         }
 
-        [CanBeNull]
-        private HashSet<string> appliedToEndReverts;
-
         public void UpdateTransforms(in double time, bool rewinding)
         {
             if (rewinding && !transformable.RemoveCompletedTransforms)
             {
                 resetLastAppliedCache();
 
-                appliedToEndReverts?.Clear();
+                var appliedToEndReverts = new HashSet<string>();
 
                 // Under the case that completed transforms are not removed, reversing the clock is permitted.
                 // We need to first look back through all the transforms and apply the start values of the ones that were previously
@@ -88,11 +84,9 @@ namespace osu.Framework.Graphics.Transforms
                         // we are in the middle of this transform, so we want to mark as not-completely-applied.
                         // note that we should only do this for the last transform of each TargetMember to avoid incorrect application order.
                         // the actual application will be in the main loop below now that AppliedToEnd is false.
-                        if (appliedToEndReverts?.Contains(t.TargetMember) != true)
+                        if (!appliedToEndReverts.Contains(t.TargetMember))
                         {
                             t.AppliedToEnd = false;
-
-                            appliedToEndReverts ??= new HashSet<string>();
                             appliedToEndReverts.Add(t.TargetMember);
                         }
                     }
