@@ -28,7 +28,7 @@ namespace osu.Framework.Graphics.Transforms
 
         private readonly T origin;
 
-        private readonly List<Transform> transforms = new List<Transform>(1); // the most common usage of transforms sees one transform being added.
+        private readonly List<Transform> transforms = ITransformSequence.TRANSFORMS_LIST_POOL.Get();
 
         private bool hasCompleted = true;
 
@@ -126,6 +126,7 @@ namespace osu.Framework.Graphics.Transforms
         public TransformSequence<T> Append(Generator childGenerator)
         {
             TransformSequence<T> child;
+
             using (origin.BeginAbsoluteSequence(currentTime, false))
                 child = childGenerator(origin);
 
@@ -427,30 +428,38 @@ namespace osu.Framework.Graphics.Transforms
 
         void ITransformSequence.TransformAborted()
         {
-            if (transforms.Count == 0)
-                return;
-
-            // No need for OnAbort events to trigger anymore, since
-            // we are already aware of the abortion.
-            foreach (var t in transforms)
+            try
             {
-                t.AbortTargetSequence = null;
-                t.CompletionTargetSequence = null;
+                if (transforms.Count == 0)
+                    return;
 
-                if (!t.HasStartValue)
-                    t.TargetTransformable.RemoveTransform(t);
+                // No need for OnAbort events to trigger anymore, since
+                // we are already aware of the abortion.
+                foreach (var t in transforms)
+                {
+                    t.AbortTargetSequence = null;
+                    t.CompletionTargetSequence = null;
+
+                    if (!t.HasStartValue)
+                        t.TargetTransformable.RemoveTransform(t);
+                }
+
+                transforms.Clear();
+                last = null;
+
+                onAbort?.Invoke();
             }
-
-            transforms.Clear();
-            last = null;
-
-            onAbort?.Invoke();
+            finally
+            {
+                ITransformSequence.TRANSFORMS_LIST_POOL.Return(transforms);
+            }
         }
 
         void ITransformSequence.TransformCompleted()
         {
             hasCompleted = true;
             onComplete?.Invoke();
+            ITransformSequence.TRANSFORMS_LIST_POOL.Return(transforms);
         }
     }
 }

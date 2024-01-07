@@ -7,8 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using JetBrains.Annotations;
 using osu.Framework.Lists;
+using osu.Framework.Utils;
 
 namespace osu.Framework.Graphics.Transforms
 {
@@ -51,14 +51,13 @@ namespace osu.Framework.Graphics.Transforms
 
         private readonly HashSet<string> targetMembers = new HashSet<string>();
 
+        private static readonly ListPool<string> string_list_pool = new ListPool<string>();
+
         public TargetGroupingTransformTracker(Transformable transformable, string targetGrouping)
         {
             TargetGrouping = targetGrouping;
             this.transformable = transformable;
         }
-
-        [CanBeNull]
-        private HashSet<string> appliedToEndReverts;
 
         public void UpdateTransforms(in double time, bool rewinding)
         {
@@ -66,7 +65,7 @@ namespace osu.Framework.Graphics.Transforms
             {
                 resetLastAppliedCache();
 
-                appliedToEndReverts?.Clear();
+                List<string> appliedToEndReverts = string_list_pool.Get();
 
                 // Under the case that completed transforms are not removed, reversing the clock is permitted.
                 // We need to first look back through all the transforms and apply the start values of the ones that were previously
@@ -91,8 +90,6 @@ namespace osu.Framework.Graphics.Transforms
                         if (appliedToEndReverts?.Contains(t.TargetMember) != true)
                         {
                             t.AppliedToEnd = false;
-
-                            appliedToEndReverts ??= new HashSet<string>();
                             appliedToEndReverts.Add(t.TargetMember);
                         }
                     }
@@ -105,6 +102,8 @@ namespace osu.Framework.Graphics.Transforms
                         t.AppliedToEnd = false;
                     }
                 }
+
+                string_list_pool.Return(appliedToEndReverts);
             }
 
             for (int i = getLastAppliedIndex(); i < transforms.Count; ++i)
