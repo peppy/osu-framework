@@ -21,6 +21,7 @@ namespace osu.Framework.Platform.SDL
         private IntPtr context;
 
         public IntPtr WindowHandle => window.WindowHandle;
+        public IntPtr DisplayHandle => window.DisplayHandle;
 
         public GraphicsSurfaceType Type { get; }
 
@@ -215,18 +216,12 @@ namespace osu.Framework.Platform.SDL
 
         bool ILinuxGraphicsSurface.IsWayland => window.IsWayland;
 
-        [SupportedOSPlatform("linux")]
-        IntPtr ILinuxGraphicsSurface.DisplayHandle => window.DisplayHandle;
-
         #endregion
 
         #region Android-specific implementation
 
         [SupportedOSPlatform("android")]
         IntPtr IAndroidGraphicsSurface.JniEnvHandle => SDL3.SDL_AndroidGetJNIEnv();
-
-        [SupportedOSPlatform("android")]
-        IntPtr IAndroidGraphicsSurface.SurfaceHandle => window.SurfaceHandle;
 
         #endregion
     }

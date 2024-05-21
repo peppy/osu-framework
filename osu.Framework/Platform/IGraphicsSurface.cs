@@ -17,6 +17,12 @@ namespace osu.Framework.Platform
         IntPtr WindowHandle { get; }
 
         /// <summary>
+        /// A pointer representing a handle to the display containing this window, provided by the operating system.
+        /// This is specific to X11/Wayland subsystems.
+        /// </summary>
+        IntPtr DisplayHandle { get; }
+
+        /// <summary>
         /// The type of surface.
         /// </summary>
         GraphicsSurfaceType Type { get; }
