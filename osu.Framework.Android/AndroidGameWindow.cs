@@ -2,29 +2,71 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
+using System.Collections.Generic;
 using osu.Framework.Bindables;
+using osu.Framework.Configuration;
 using osu.Framework.Platform;
+using osuTK;
+using osuTK.Graphics;
 
 namespace osu.Framework.Android
 {
-    internal class AndroidGameWindow : SDL3MobileWindow
+    internal class AndroidGameWindow : OsuTKWindow
     {
-        public override IntPtr DisplayHandle => AndroidGameActivity.Surface.NativeSurface?.Handle ?? IntPtr.Zero;
+        private readonly AndroidGameView view;
 
-        public AndroidGameWindow(GraphicsSurfaceType surfaceType, string appName)
-            : base(surfaceType, appName)
+        public override IGraphicsContext Context => view.GraphicsContext;
+
+        public override bool Focused => IsActive.Value;
+
+        public override IBindable<bool> IsActive { get; }
+
+        public override Platform.WindowState WindowState
         {
+            get => Platform.WindowState.Normal;
+            set { }
         }
 
-        public override void Create()
+        public event Action? CursorStateChanged;
+
+        public override CursorState CursorState
         {
-            base.Create();
+            get => base.CursorState;
+            set
+            {
+                // cursor should always be confined on mobile platforms, to have UserInputManager confine the cursor to window bounds
+                base.CursorState = value | CursorState.Confined;
+                CursorStateChanged?.Invoke();
+            }
+        }
 
-            SafeAreaPadding.BindTo(AndroidGameActivity.Surface.SafeAreaPadding);
+        public AndroidGameWindow(AndroidGameView view)
+            : base(view)
+        {
+            this.view = view;
+            IsActive = view.Activity.IsActive.GetBoundCopy();
+        }
 
-            // Android SDL doesn't receive these events at start, so it never receives focus until it comes back from background
-            ((BindableBool)CursorInWindow).Value = true;
-            Focused = true;
+        public override void SetupWindow(FrameworkConfigManager config)
+        {
+            CursorState |= CursorState.Confined;
+            SafeAreaPadding.BindTo(view.SafeAreaPadding);
+        }
+
+        public override IEnumerable<WindowMode> SupportedWindowModes => new[]
+        {
+            Configuration.WindowMode.Fullscreen,
+        };
+
+        public override void Run()
+        {
+            view.Run();
+        }
+
+        protected override DisplayDevice CurrentDisplayDevice
+        {
+            get => DisplayDevice.Default;
+            set => throw new InvalidOperationException();
         }
     }
 }

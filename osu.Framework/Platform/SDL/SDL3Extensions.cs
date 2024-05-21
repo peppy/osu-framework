@@ -446,9 +446,6 @@ namespace osu.Framework.Platform.SDL
 
                 case SDL_Scancode.SDL_SCANCODE_SLEEP:
                     return Key.Sleep;
-
-                case SDL_Scancode.SDL_SCANCODE_AC_BACK:
-                    return Key.Escape;
             }
         }
 

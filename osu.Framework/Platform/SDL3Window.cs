@@ -119,7 +119,7 @@ namespace osu.Framework.Platform
             }
         }
 
-        public virtual IntPtr DisplayHandle
+        public IntPtr DisplayHandle
         {
             get
             {

@@ -8,12 +8,16 @@ using Android.App;
 using Android.Content;
 using osu.Framework.Android.Graphics.Textures;
 using osu.Framework.Android.Graphics.Video;
+using osu.Framework.Android.Input;
 using osu.Framework.Configuration;
 using osu.Framework.Extensions;
 using osu.Framework.Extensions.IEnumerableExtensions;
 using osu.Framework.Extensions.ObjectExtensions;
 using osu.Framework.Graphics.Textures;
 using osu.Framework.Graphics.Video;
+using osu.Framework.Input;
+using osu.Framework.Input.Handlers;
+using osu.Framework.Input.Handlers.Midi;
 using osu.Framework.IO.Stores;
 using osu.Framework.Logging;
 using osu.Framework.Platform;
@@ -21,14 +25,13 @@ using Uri = Android.Net.Uri;
 
 namespace osu.Framework.Android
 {
-    public class AndroidGameHost : SDL3GameHost
+    public class AndroidGameHost : OsuTKGameHost
     {
-        private readonly AndroidGameActivity activity;
+        private readonly AndroidGameView gameView;
 
-        public AndroidGameHost(AndroidGameActivity activity)
-            : base(string.Empty)
+        public AndroidGameHost(AndroidGameView gameView)
         {
-            this.activity = activity;
+            this.gameView = gameView;
         }
 
         protected override void SetupConfig(IDictionary<FrameworkSetting, object> defaultOverrides)
@@ -39,19 +42,27 @@ namespace osu.Framework.Android
             base.SetupConfig(defaultOverrides);
         }
 
-        protected override IWindow CreateWindow(GraphicsSurfaceType preferredSurface) => new AndroidGameWindow(preferredSurface, Options.FriendlyGameName);
+        protected override IWindow CreateWindow(GraphicsSurfaceType preferredSurface) => new AndroidGameWindow(gameView);
 
-        protected override void DrawFrame()
-        {
-            if (AndroidGameActivity.Surface.IsSurfaceReady)
-                base.DrawFrame();
-        }
+        protected override Clipboard CreateClipboard() => new AndroidClipboard(gameView);
 
         public override bool CanExit => false;
 
         public override bool CanSuspendToBackground => true;
 
         public override bool OnScreenKeyboardOverlapsGameWindow => true;
+
+        protected override TextInputSource CreateTextInput() => new AndroidTextInput(gameView);
+
+        protected override IEnumerable<InputHandler> CreateAvailableInputHandlers() =>
+            new InputHandler[]
+            {
+                new AndroidMouseHandler(gameView),
+                new AndroidKeyboardHandler(gameView),
+                new AndroidTouchHandler(gameView),
+                new AndroidJoystickHandler(gameView),
+                new MidiHandler()
+            };
 
         public override string InitialFileSelectorPath => @"/sdcard";
 
@@ -76,7 +87,7 @@ namespace osu.Framework.Android
                 {
                     // Recommended way to open URLs on Android 11+
                     // https://developer.android.com/training/package-visibility/use-cases#open-urls-browser-or-other-app
-                    activity.StartActivity(intent);
+                    gameView.Activity.StartActivity(intent);
                 }
             }
             catch (Exception ex)
@@ -93,7 +104,7 @@ namespace osu.Framework.Android
 
         public override bool SuspendToBackground()
         {
-            return activity.MoveTaskToBack(true);
+            return gameView.Activity.MoveTaskToBack(true);
         }
     }
 }
