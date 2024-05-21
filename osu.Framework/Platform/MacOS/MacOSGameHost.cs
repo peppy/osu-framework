@@ -21,7 +21,7 @@ namespace osu.Framework.Platform.MacOS
         {
         }
 
-        protected override IWindow CreateWindow(GraphicsSurfaceType preferredSurface) => new MacOSWindow(preferredSurface, Options.FriendlyGameName);
+        protected override IWindow CreateWindow(GraphicsSurfaceType preferredSurface) => new MacOSWindow(preferredSurface);
 
         public override IEnumerable<string> UserStoragePaths
         {
