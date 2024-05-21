@@ -93,7 +93,7 @@ namespace osu.Framework.Platform.Windows
 
         protected override void HandleEventFromFilter(SDL_Event evt)
         {
-            switch (evt.Type)
+            switch (evt.type)
             {
                 case SDL_EventType.SDL_EVENT_WINDOW_FOCUS_LOST:
                     warpCursorFromFocusLoss();
