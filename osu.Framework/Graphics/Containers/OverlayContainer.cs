@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 using osu.Framework.Input;
-using osu.Framework.Input.Events;
+using osuTK;
 
 namespace osu.Framework.Graphics.Containers
 {
@@ -16,13 +16,6 @@ namespace osu.Framework.Graphics.Containers
         /// Whether we should block any positional input from interacting with things behind us.
         /// </summary>
         protected virtual bool BlockPositionalInput => true;
-
-        /// <summary>
-        /// Scroll events are sometimes required to be handled differently to general positional input.
-        /// This covers whether scroll events that occur within this overlay's bounds are blocked or not.
-        /// Defaults to the same value as <see cref="BlockPositionalInput"/>
-        /// </summary>
-        protected virtual bool BlockScrollInput => BlockPositionalInput;
 
         /// <summary>
         /// Whether we should block any non-positional input from interacting with things behind us.
@@ -41,11 +34,18 @@ namespace osu.Framework.Graphics.Containers
             return base.BuildNonPositionalInputQueue(queue, allowBlocking);
         }
 
-        public override bool DragBlocksClick => false;
+        internal override bool BuildPositionalInputQueue(Vector2 screenSpacePos, List<Drawable> queue)
+        {
+            if (PropagatePositionalInputSubTree && HandlePositionalInput && BlockPositionalInput)
+            {
+                // when blocking positional input behind us, we still want to make sure the global handlers receive events
+                // but we don't want other drawables behind us handling them.
+                queue.RemoveAll(d => !(d is IHandleGlobalKeyboardInput));
+            }
 
-        protected override bool OnHover(HoverEvent e) => BlockPositionalInput;
-        protected override bool OnMouseDown(MouseDownEvent e) => BlockPositionalInput;
-        protected override bool OnMouseMove(MouseMoveEvent e) => BlockPositionalInput;
-        protected override bool OnScroll(ScrollEvent e) => BlockScrollInput && base.ReceivePositionalInputAt(e.ScreenSpaceMousePosition);
+            return base.BuildPositionalInputQueue(screenSpacePos, queue);
+        }
+
+        public override bool DragBlocksClick => false;
     }
 }
