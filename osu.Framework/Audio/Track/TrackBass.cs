@@ -335,7 +335,7 @@ namespace osu.Framework.Audio.Track
             Debug.Assert(CanPerformInline);
 
             long bytePosition = bassMixer.ChannelGetPosition(this);
-            if (bytePosition != -1)
+            // if (bytePosition != -1)
                 Interlocked.Exchange(ref currentTime, Bass.ChannelBytes2Seconds(activeStream, bytePosition) * 1000);
         }
 
